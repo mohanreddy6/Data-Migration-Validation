@@ -1,4 +1,17 @@
-# Data Migration Validation (Ready-to-Run)
+# Data Migration Validation Tool
+
+During a large-scale system migration, ensuring data accuracy was critical to prevent compliance issues and customer impact.  
+I built this Python-based tool to automatically validate **old vs new** datasets using a primary key and produce:
+- CSV mismatch report
+- Human-readable summary
+- HTML report for non-technical review
+
+## Quick Start (Windows)
+```bat
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python src\validate.py --old sample_data\old_customers.csv --new sample_data\new_customers.csv --key customer_id --report output\mismatch_report.csv --summary output\summary.txt --html output\report.html
 
 A self-contained project to compare **old** vs **new** datasets during system migrations and generate a mismatch report.
 
