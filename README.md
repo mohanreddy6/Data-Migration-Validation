@@ -71,6 +71,15 @@ Rows compared: 992
 Changed cells (value-level): 128
 Columns compared: name,email,dob,balance,status
 ```
+## Demo
+- CLI run:  
+  ![CLI run](docs/terminal-run.png)
+
+- HTML report screenshot:  
+  ![HTML report](docs/html-report.png)
+
+- Live sample report (GitHub Pages):  
+  https://mohanreddy6.github.io/data-migration-validation/sample-report.html
 
 ## 🧪 Notes
 - Uses **pandas** only; no databases or external services required.
