@@ -93,7 +93,8 @@ Columns compared: name,email,dob,balance,status
 * **Live Report Example:**
 
   Access a live sample report at:
-  https://mohanreddy6.github.io/Data-Migration-Validation/
+  https://mohanreddy6.github.io/Data-Migration-Validation/sample-report.html
+
 
 ## Extensibility and Customization
 
