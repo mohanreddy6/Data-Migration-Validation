@@ -1,6 +1,10 @@
 # Data Migration Validation Tool
 
-This project is designed to help validate data migrations by comparing old and new datasets. It generates clear and easy-to-read reports suitable for non-technical reviewers.
+This project is designed to validate data migrations by comparing old and new datasets. It generates clear, easy-to-read reports suitable for non-technical reviewers, ensuring the accuracy and integrity of data transfers during system migrations.
+
+## Importance
+
+Accurate data migration is critical to avoid errors, data loss, and inconsistencies in new systems. This tool automates validation, saving considerable manual effort and ensuring high reliability.
 
 ## Quick Start Instructions (Windows)
 
@@ -80,19 +84,28 @@ Columns compared: name,email,dob,balance,status
 
 * **Command Line Run:**
 
-  A screenshot or demonstration would typically show the execution of the script in a command-line interface.
+  Provides an immediate view of script execution, helping quickly identify any errors or issues.
 
 * **HTML Report:**
 
-  A screenshot or live example typically demonstrates the HTML report generated for visual inspection.
+  Delivers an intuitive visual format for quickly assessing discrepancies and understanding migration outcomes.
 
 * **Live Report Example:**
 
   Access a live sample report at:
   [https://mohanreddy6.github.io/data-migration-validation/sample-report.html](https://mohanreddy6.github.io/data-migration-validation/sample-report.html)
 
-## Additional Information
+## Extensibility and Customization
 
-* The validation tool relies solely on the pandas library, requiring no additional databases or external services.
-* CSV files can be large; the tool intelligently handles summary generation but fully loads files into memory for detailed comparisons. For extremely large datasets, consider processing data in chunks.
-* The script (`validate.py`) can be easily extended to generate Excel reports or integrated into automated CI/CD workflows.
+* Built using the pandas library, this tool requires no external databases or services.
+* Designed to handle large CSV files efficiently. For extremely large datasets, consider implementing chunked processing.
+* Easily extendable to generate Excel reports or integrate into CI/CD workflows.
+
+## Error Handling and Limitations
+
+* Clearly identifies duplicates, missing keys, and malformed data.
+* Provides detailed error messages and logs for easy troubleshooting and rectification.
+
+## Testing
+
+The project includes unit tests to ensure code correctness and reliability. Integration with continuous integration and deployment (CI/CD) pipelines is straightforward and encouraged for automated testing.
