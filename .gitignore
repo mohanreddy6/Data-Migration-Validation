@@ -13,6 +13,7 @@ output/*
 # --- allow CSV proofs inside output/ ---
 output/
 !output/            # re-include the directory so Git scans inside it
-output/*            # ignore everything inside by default
+output/**            # ignore everything inside by default
 !output/*.csv       # except CSVs (proof files)
+!output/**/*.csv
 !output/.gitkeep    # keep the folder even when empty
