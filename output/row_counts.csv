@@ -1,0 +1,2 @@
+old_rows,new_rows,allowed_deletions,allowed_additions,adjusted_old,adjusted_new,match
+1000,998,5,3,995,995,True

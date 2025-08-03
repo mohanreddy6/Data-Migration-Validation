@@ -1,0 +1,7 @@
+column,in_old,in_new,old_dtype,new_dtype
+balance,True,True,object,object
+customer_id,True,True,object,object
+dob,True,True,object,object
+email,True,True,object,object
+name,True,True,object,object
+status,True,True,object,object
