@@ -108,3 +108,72 @@ results.append((
     "PASS" if null_ok else "WARN",
     "; ".join([f"{r['field']}: Old={r['old_nulls']}, New={r['new_nulls']}" for r in null_rows])
 ))
+# ... previous code ...
+
+results.append((
+    "Nulls in required fields",
+    "PASS" if null_ok else "WARN",
+    "; ".join([f"{r['field']}: Old={r['old_nulls']}, New={r['new_nulls']}” for r in null_rows])
+))
+
+# >>> PASTE PART 3 HERE <<<
+# --------------------
+# Membership deltas (excluding allowlists)
+# --------------------
+old_keys = set(old_pk)
+new_keys = set(new_pk)
+
+only_in_old_keys = (old_keys - new_keys) - ALLOWED_DELETIONS
+only_in_new_keys = (new_keys - old_keys) - ALLOWED_ADDITIONS
+
+only_in_old = old_df[old_df[primary_key].isin(only_in_old_keys)].copy()
+only_in_new = new_df[new_df[primary_key].isin(only_in_new_keys)].copy()
+
+# Save CSV proofs (and legacy names for compatibility)
+(only_in_old.sort_values(primary_key)
+ .to_csv(out_dir / "only_in_old.csv", index=False))
+(only_in_new.sort_values(primary_key)
+ .to_csv(out_dir / "only_in_new.csv", index=False))
+
+only_in_old.to_csv(out_dir / "missing_in_new.csv", index=False)
+only_in_new.to_csv(out_dir / "extra_in_new.csv", index=False)
+
+# --------------------
+# Other proof artifacts
+# --------------------
+import pandas as pd  # safe if already imported
+
+row_counts = pd.DataFrame([
+    {"dataset": "OLD", "raw_count": old_total,
+     "allowlisted_ids": int(old_pk.isin(ALLOWED_DELETIONS).sum()),
+     "adjusted_count": adj_old},
+    {"dataset": "NEW", "raw_count": new_total,
+     "allowlisted_ids": int(new_pk.isin(ALLOWED_ADDITIONS).sum()),
+     "adjusted_count": adj_new},
+])
+row_counts.to_csv(out_dir / "row_counts.csv", index=False)
+
+def duplicate_rows(df, pk_series):
+    dup_keys = pk_series[pk_series.duplicated(keep=False)]
+    if dup_keys.empty:
+        return pd.DataFrame(columns=df.columns)
+    return df[df[primary_key].isin(set(dup_keys))].copy().sort_values(primary_key)
+
+duplicate_rows(old_df, old_pk).to_csv(out_dir / "duplicates_old.csv", index=False)
+duplicate_rows(new_df, new_pk).to_csv(out_dir / "duplicates_new.csv", index=False)
+
+pd.DataFrame(null_rows).to_csv(out_dir / "nulls_summary.csv", index=False)
+
+all_cols = sorted(set(old_df.columns) | set(new_df.columns))
+schema_rows = []
+for c in all_cols:
+    schema_rows.append({
+        "column": c,
+        "present_in_old": c in old_df.columns,
+        "present_in_new": c in new_df.columns,
+        "dtype_old": str(old_df[c].dtype) if c in old_df.columns else "",
+        "dtype_new": str(new_df[c].dtype) if c in new_df.columns else "",
+    })
+pd.DataFrame(schema_rows).to_csv(out_dir / "schema_comparison.csv", index=False)
+
+# ... next parts (mismatches, HTML) go below ...
