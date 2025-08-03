@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; }
-    .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; max-width: 1000px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; max-width: 1100px; }
     h1 { margin-top: 0; }
     table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
@@ -14,10 +14,12 @@
     .ok { color: #1a7f37; font-weight: 600; }
     .warn { color: #d97706; font-weight: 600; }
     .fail { color: #b91c1c; font-weight: 600; }
-    .meta { color: #555; margin-top: .5rem; }
+    .meta { color: #555; margin: .25rem 0 .5rem; }
     .section { margin-top: 1.5rem; }
     a { text-decoration: none; }
     .small { font-size: 0.9rem; color: #666; }
+    ul { margin: .5rem 0 0 1.2rem; }
+    code { background:#f6f6f6; padding:0 .25rem; border-radius:4px; }
   </style>
 </head>
 <body>
@@ -35,11 +37,20 @@
         <tr><th>Check</th><th>Status</th><th>Notes</th></tr>
       </thead>
       <tbody>
-        <tr><td>Row count match</td><td><span class="ok">PASS</span></td><td>Old=1000 (adj 995), New=998 (adj 995)</td></tr><tr><td>Primary key duplicates</td><td><span class="ok">PASS</span></td><td>Old dupes=0, New dupes=0</td></tr><tr><td>Nulls in required fields</td><td><span class="ok">PASS</span></td><td>email: Old=0, New=0</td></tr>
+        <tr><td>Row count match</td><td><span class="ok">PASS</span></td><td>Old=1000 (adj 995; allowed deletions 5), New=998 (adj 995; allowed additions 3)</td></tr><tr><td>Primary key duplicates</td><td><span class="ok">PASS</span></td><td>Old dupes=0, New dupes=0</td></tr><tr><td>Nulls in required fields</td><td><span class="ok">PASS</span></td><td>email: Old=0, New=0</td></tr>
       </tbody>
     </table>
 
     
+
+    <div class="section">
+      <h2>Proofs (downloadables)</h2>
+      <ul>
+        <li><a href="output/row_counts.csv">Row counts (CSV)</a></li><li><a href="output/duplicates_old.csv">Duplicates in OLD (CSV)</a></li><li><a href="output/duplicates_new.csv">Duplicates in NEW (CSV)</a></li><li><a href="output/nulls_summary.csv">Nulls summary (CSV)</a></li><li><a href="output/schema_comparison.csv">Schema comparison (CSV)</a></li><li><a href="output/possible_rekeys.csv">Possible rekeys by email (CSV)</a></li>
+        <li><a href="output/manifest.json">Manifest (JSON with SHA-256, env, commit)</a></li>
+      </ul>
+      <p class="small">Tip: open <code>manifest.json</code> to see file hashes and the exact environment used.</p>
+    </div>
   </div>
 </body>
 </html>
