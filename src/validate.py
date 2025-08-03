@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 from pathlib import Path
 from string import Template
@@ -13,6 +14,17 @@ out_dir = repo_root / "output"
 out_dir.mkdir(exist_ok=True)
 
 out_html = repo_root / "sample-report.html"
+# Verification config (manual sign-off)
+verification_path = repo_root / "verification.json"
+verification = {"checks": {}, "mismatches": []}
+if verification_path.exists():
+    verification = json.loads(verification_path.read_text(encoding="utf-8"))
+ver_checks = verification.get("checks", {})
+ver_rows = verification.get("mismatches", [])
+ver_rows_set = {(str(r.get("customer_id")), str(r.get("column")).lower())
+                for r in ver_rows if r.get("verified")}
+
+
 
 # --------------------
 # Config
