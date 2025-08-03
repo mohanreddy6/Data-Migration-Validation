@@ -6,3 +6,7 @@ __pycache__/
 output/
 __pycache__/
 *.pyc
+# Track only CSVs (and .gitkeep) inside output/
+output/*
+!output/*.csv
+!output/.gitkeep
