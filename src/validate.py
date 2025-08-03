@@ -25,6 +25,9 @@ required_fields = ["email"]        # add more fields if needed
 ALLOWED_DELETIONS = {"C100105", "C100521", "C100683", "C100690", "C100717"}
 ALLOWED_ADDITIONS = {"NEW0", "NEW1", "NEW2"}
 
+# Max rows to show inline for big tables
+INLINE_MAX_ROWS = 20
+
 # --------------------
 # Load
 # --------------------
@@ -95,7 +98,7 @@ missing_in_new = old_df.loc[missing_mask].copy()
 extra_in_new   = new_df.loc[extra_mask].copy()
 
 # --------------------
-# Proof artifacts
+# Proof artifacts (CSV files)
 # --------------------
 # Row counts (with adjustments)
 row_counts = pd.DataFrame([
@@ -160,14 +163,29 @@ extra_count   = len(extra_in_new)
 # --------------------
 # HTML helpers
 # --------------------
-def df_html_preview(df, cols=None, n=10):
+def df_preview(df: pd.DataFrame, max_rows: int = INLINE_MAX_ROWS, cols=None) -> str:
     if df.empty:
         return "<em>None</em>"
+    show = df
     if cols:
         cols = [c for c in cols if c in df.columns]
         if cols:
-            df = df[cols]
-    return df.head(n).to_html(index=False, border=0)
+            show = show[cols]
+    if len(show) > max_rows:
+        head = show.head(max_rows)
+        html = head.to_html(index=False, border=0)
+        return f'<div>{html}<div class="small">Showing first {max_rows} of {len(show)} rows</div></div>'
+    return show.to_html(index=False, border=0)
+
+def section_with_download(title: str, csv_href: str, table_html: str, count_note: str = "") -> str:
+    note = f" — {count_note}" if count_note else ""
+    # Use details/summary to make large sections collapsible
+    return f"""
+    <details class="section" open>
+      <summary><strong>{title}</strong> <span class="small">{note}</span> — <a href="{csv_href}">download CSV</a></summary>
+      <div style="margin-top:.75rem">{table_html}</div>
+    </details>
+    """
 
 def badge(status: str) -> str:
     cls = "ok" if status == "PASS" else ("warn" if status == "WARN" else "fail")
@@ -178,39 +196,53 @@ rows_html = "".join(
     for name, status, notes in results
 )
 
+# Build each proof section (inline preview + download)
 likely_cols = [primary_key, "email", "name", "first_name", "last_name"]
-missing_preview = df_html_preview(missing_in_new, cols=likely_cols)
-extra_preview   = df_html_preview(extra_in_new,   cols=likely_cols)
 
-# Differences section (show only if non-empty)
-if missing_count == 0 and extra_count == 0:
-    differences_section = ""
+row_counts_html = df_preview(row_counts)
+dups_old_html = df_preview(dups_old_df)
+dups_new_html = df_preview(dups_new_df)
+nulls_summary_html = df_preview(nulls_summary)
+schema_cmp_html = df_preview(schema_cmp)
+missing_html = df_preview(missing_in_new, cols=likely_cols)
+extra_html   = df_preview(extra_in_new,   cols=likely_cols)
+
+proof_sections = []
+
+proof_sections.append(section_with_download(
+    "Row counts (raw & adjusted)", "output/row_counts.csv", row_counts_html))
+
+proof_sections.append(section_with_download(
+    "Primary key duplicates — OLD", "output/duplicates_old.csv", dups_old_html,
+    count_note=f"{len(dups_old_df)} rows"))
+
+proof_sections.append(section_with_download(
+    "Primary key duplicates — NEW", "output/duplicates_new.csv", dups_new_html,
+    count_note=f"{len(dups_new_df)} rows"))
+
+proof_sections.append(section_with_download(
+    "Nulls in required fields", "output/nulls_summary.csv", nulls_summary_html))
+
+proof_sections.append(section_with_download(
+    "Schema comparison", "output/schema_comparison.csv", schema_cmp_html,
+    count_note=f"{len(schema_cmp)} columns"))
+
+# Differences only if non-empty (but still provide download sections)
+if missing_count > 0 or extra_count > 0:
+    proof_sections.append(section_with_download(
+        "Missing in NEW (unexpected)", "output/missing_in_new.csv", missing_html,
+        count_note=f"{missing_count} rows"))
+    proof_sections.append(section_with_download(
+        "Extra in NEW (unexpected)", "output/extra_in_new.csv", extra_html,
+        count_note=f"{extra_count} rows"))
 else:
-    differences_section = f"""
-    <div class="section">
-      <h2>Key Differences (unexpected)</h2>
-      <p><strong>Missing in NEW:</strong> {missing_count} rows &nbsp;—&nbsp;
-         <a href="output/missing_in_new.csv">download CSV</a></p>
-      {missing_preview}
-      <p style="margin-top:1rem;"><strong>Extra in NEW:</strong> {extra_count} rows &nbsp;—&nbsp;
-         <a href="output/extra_in_new.csv">download CSV</a></p>
-      {extra_preview}
-    </div>
-    """
+    # still list as empty proofs for completeness
+    proof_sections.append(section_with_download(
+        "Missing in NEW (unexpected)", "output/missing_in_new.csv", "<em>None</em>", "0 rows"))
+    proof_sections.append(section_with_download(
+        "Extra in NEW (unexpected)", "output/extra_in_new.csv", "<em>None</em>", "0 rows"))
 
-# Proofs section (always shown)
-proofs = [
-    ("Row counts (raw/adjusted)", "output/row_counts.csv"),
-    ("Primary key duplicates — OLD", "output/duplicates_old.csv"),
-    ("Primary key duplicates — NEW", "output/duplicates_new.csv"),
-    ("Nulls in required fields", "output/nulls_summary.csv"),
-    ("Schema comparison", "output/schema_comparison.csv"),
-    ("Missing in NEW (unexpected)", "output/missing_in_new.csv"),
-    ("Extra in NEW (unexpected)", "output/extra_in_new.csv"),
-]
-proofs_html = "<ul>" + "".join(
-    f'<li><a href="{href}">{label}</a></li>' for label, href in proofs
-) + "</ul>"
+proofs_html = "\n".join(proof_sections)
 
 # --------------------
 # Build HTML (Template is safe with CSS braces and %)
@@ -232,9 +264,13 @@ html_tpl = Template("""<!doctype html>
     .warn { color: #d97706; font-weight: 600; }
     .fail { color: #b91c1c; font-weight: 600; }
     .meta { color: #555; margin-top: .5rem; }
-    .section { margin-top: 1.5rem; }
+    .section { margin-top: 1.25rem; }
     a { text-decoration: none; }
     .small { font-size: 0.9rem; color: #666; }
+    details > summary { cursor: pointer; list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::before { content: "▸ "; }
+    details[open] > summary::before { content: "▾ "; }
   </style>
 </head>
 <body>
@@ -256,10 +292,8 @@ html_tpl = Template("""<!doctype html>
       </tbody>
     </table>
 
-    $differences_section
-
     <div class="section">
-      <h2>Proofs (downloadable)</h2>
+      <h2>Proofs (inline previews + downloads)</h2>
       $proofs_html
     </div>
   </div>
@@ -273,16 +307,10 @@ html = html_tpl.substitute(
     rows_html=rows_html,
     allowed_deletions=", ".join(sorted(ALLOWED_DELETIONS)) or "None",
     allowed_additions=", ".join(sorted(ALLOWED_ADDITIONS)) or "None",
-    differences_section=differences_section,
     proofs_html=proofs_html,
 )
 
 out_html.write_text(html, encoding="utf-8")
 
 print(f"Wrote: {out_html}")
-print(f"Row counts -> {row_counts_path}")
-print(f"Duplicates OLD -> {duplicates_old_path} | NEW -> {duplicates_new_path}")
-print(f"Nulls summary -> {nulls_summary_path}")
-print(f"Schema comparison -> {schema_cmp_path}")
-print(f"Missing in NEW -> {missing_path}")
-print(f"Extra in NEW   -> {extra_path}")
+print(f"Proofs saved to: {out_dir}")
