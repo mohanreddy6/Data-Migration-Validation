@@ -1,0 +1,11 @@
+{
+  "checks": {
+    "Row count match": {"verified": true, "by": "Mohan", "at": "2025-08-03"},
+    "Primary key duplicates": {"verified": true, "by": "Mohan", "at": "2025-08-03"},
+    "Nulls in required fields": {"verified": true, "by": "Mohan", "at": "2025-08-03"}
+  },
+  "mismatches": [
+    {"customer_id": "C100123", "column": "email", "verified": true, "by": "QA", "at": "2025-08-03"},
+    {"customer_id": "C100456", "column": "name",  "verified": true, "by": "QA", "at": "2025-08-03"}
+  ]
+}
