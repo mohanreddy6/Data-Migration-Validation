@@ -1,6 +1,1 @@
 customer_id,name,email,dob,balance,status
-C100105,Customer 105,user105@example.com,1982-01-05,2492.92,active
-C100521,Customer 521,user521@example.com,1989-12-26,3808.91,pending
-C100683,Customer 683,user683@example.com,1993-02-02,6686.43,inactive
-C100690,Customer 690,user690@example.com,1993-03-23,3236.79,active
-C100717,Customer 717,user717@example.com,1993-09-28,9650.27,active

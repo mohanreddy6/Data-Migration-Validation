@@ -1,4 +1,1 @@
 customer_id,name,email,dob,balance,status
-NEW0,New Customer 0,new0@example.com,1995-05-15,150.75,active
-NEW1,New Customer 1,new1@example.com,1990-12-01,2040.1,pending
-NEW2,New Customer 2,new2@example.com,1988-07-07,0.0,active

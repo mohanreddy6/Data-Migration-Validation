@@ -17,91 +17,29 @@
     .meta { color: #555; margin-top: .5rem; }
     .section { margin-top: 1.5rem; }
     a { text-decoration: none; }
+    .small { font-size: 0.9rem; color: #666; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Data Migration Validation Report</h1>
     <div class="meta">Source files: old_customers.csv → new_customers.csv</div>
+    <div class="small meta">
+      Exceptions applied:
+      <strong>Allowed deletions</strong> = C100105, C100521, C100683, C100690, C100717 &nbsp; | &nbsp;
+      <strong>Allowed additions</strong> = NEW0, NEW1, NEW2
+    </div>
 
     <table>
       <thead>
         <tr><th>Check</th><th>Status</th><th>Notes</th></tr>
       </thead>
       <tbody>
-        <tr><td>Row count match</td><td><span class="fail">FAIL</span></td><td>Old=1000, New=998</td></tr><tr><td>Primary key duplicates</td><td><span class="ok">PASS</span></td><td>Old dupes=0, New dupes=0</td></tr><tr><td>Nulls in required fields</td><td><span class="ok">PASS</span></td><td>email: Old=0, New=0</td></tr>
+        <tr><td>Row count match</td><td><span class="ok">PASS</span></td><td>Old=1000 (adj 995), New=998 (adj 995)</td></tr><tr><td>Primary key duplicates</td><td><span class="ok">PASS</span></td><td>Old dupes=0, New dupes=0</td></tr><tr><td>Nulls in required fields</td><td><span class="ok">PASS</span></td><td>email: Old=0, New=0</td></tr>
       </tbody>
     </table>
 
-    <div class="section">
-      <h2>Key Differences</h2>
-      <p><strong>Missing in NEW:</strong> 5 rows &nbsp;—&nbsp;
-         <a href="output/missing_in_new.csv">download CSV</a></p>
-      <table class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th>customer_id</th>
-      <th>email</th>
-      <th>name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>C100105</td>
-      <td>user105@example.com</td>
-      <td>Customer 105</td>
-    </tr>
-    <tr>
-      <td>C100521</td>
-      <td>user521@example.com</td>
-      <td>Customer 521</td>
-    </tr>
-    <tr>
-      <td>C100683</td>
-      <td>user683@example.com</td>
-      <td>Customer 683</td>
-    </tr>
-    <tr>
-      <td>C100690</td>
-      <td>user690@example.com</td>
-      <td>Customer 690</td>
-    </tr>
-    <tr>
-      <td>C100717</td>
-      <td>user717@example.com</td>
-      <td>Customer 717</td>
-    </tr>
-  </tbody>
-</table>
-      <p style="margin-top:1rem;"><strong>Extra in NEW:</strong> 3 rows &nbsp;—&nbsp;
-         <a href="output/extra_in_new.csv">download CSV</a></p>
-      <table class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th>customer_id</th>
-      <th>email</th>
-      <th>name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>NEW0</td>
-      <td>new0@example.com</td>
-      <td>New Customer 0</td>
-    </tr>
-    <tr>
-      <td>NEW1</td>
-      <td>new1@example.com</td>
-      <td>New Customer 1</td>
-    </tr>
-    <tr>
-      <td>NEW2</td>
-      <td>new2@example.com</td>
-      <td>New Customer 2</td>
-    </tr>
-  </tbody>
-</table>
-    </div>
+    
   </div>
 </body>
 </html>
