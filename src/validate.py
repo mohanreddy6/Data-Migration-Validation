@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 from pathlib import Path
-from string import Template  # (kept if you use it later)
+from string import Template  # keep if you use it later
 
 # --------------------
 # Paths
@@ -61,6 +61,36 @@ new_df[primary_key] = new_df[primary_key].astype(str).str.strip()
 
 old_pk = old_df[primary_key]
 new_pk = new_df[primary_key]
+
+# basic counts (raw)
+old_total = len(old_df)
+new_total = len(new_df)
+
+# --------------------
+# Checks (row count, dups, nulls)
+# --------------------
+results = []
+
+# 1) Row count match (adjusted by allowlists)
+adj_old = old_total - old_pk.isin(ALLOWED_DELETIONS).sum()
+adj_new = new_total - new_pk.isin(ALLOWED_ADDITIONS).sum()
+row_match = adj_old == adj_new
+results.append((
+    "Row count match",
+    "PASS" if row_match else "FAIL",
+    f"Old={old_total} (adj {adj_old}), New={new_total} (adj {adj_new})"
+))
+
+# 2) Primary key duplicates
+old_dups_ct = old_pk.duplicated().sum()
+new_dups_ct = new_pk.duplicated().sum()
+pk_ok = (old_dups_ct == 0) and (new_dups_ct == 0)
+results.append((
+    "Primary key duplicates",
+    "PASS" if pk_ok else "FAIL",
+    f"Old dupes={old_dups_ct}, New dupes={new_dups_ct}"
+))
+
 # 3) Nulls in required fields
 null_rows = []
 null_ok = True
@@ -77,35 +107,4 @@ results.append((
     "Nulls in required fields",
     "PASS" if null_ok else "WARN",
     "; ".join([f"{r['field']}: Old={r['old_nulls']}, New={r['new_nulls']}" for r in null_rows])
-))
-
-
-
-# basic counts (raw)
-old_total = len(old_df)
-new_total = len(new_df)
-
-# --------------------
-# Checks (row count, dups, nulls)
-# --------------------
-results = []
-
-# row count (adjusted by allowlists)
-adj_old = old_total - old_pk.isin(ALLOWED_DELETIONS).sum()
-adj_new = new_total - new_pk.isin(ALLOWED_ADDITIONS).sum()
-row_match = adj_old == adj_new
-results.append((
-    "Row count match",
-    "PASS" if row_match else "FAIL",
-    f"Old={old_total} (adj {adj_old}), New={new_total} (adj {adj_new})"
-))
-
-# duplicate PK
-old_dups_ct = old_pk.duplicated().sum()
-new_dups_ct = new_pk.duplicated().sum()
-pk_ok = (old_dups_ct == 0) and (new_dups_ct == 0)
-results.append((
-    "Primary key duplicates",
-    "PASS" if pk_ok else "FAIL",
-    f"Old dupes={old_dups_ct}, New dupes={new_dups_ct}"
 ))
