@@ -61,6 +61,25 @@ new_df[primary_key] = new_df[primary_key].astype(str).str.strip()
 
 old_pk = old_df[primary_key]
 new_pk = new_df[primary_key]
+# 3) Nulls in required fields
+null_rows = []
+null_ok = True
+for col in required_fields:
+    old_val = old_df[col].isna().sum() if col in old_df.columns else "col-missing"
+    new_val = new_df[col].isna().sum() if col in new_df.columns else "col-missing"
+    if isinstance(old_val, int) and old_val > 0:
+        null_ok = False
+    if isinstance(new_val, int) and new_val > 0:
+        null_ok = False
+    null_rows.append({"field": col, "old_nulls": old_val, "new_nulls": new_val})
+
+results.append((
+    "Nulls in required fields",
+    "PASS" if null_ok else "WARN",
+    "; ".join([f"{r['field']}: Old={r['old_nulls']}, New={r['new_nulls']}" for r in null_rows])
+))
+
+
 
 # basic counts (raw)
 old_total = len(old_df)
