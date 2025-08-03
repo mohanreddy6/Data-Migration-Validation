@@ -200,4 +200,187 @@ if "email" in old_df.columns and "email" in new_df.columns:
         old_row = old_email_map.loc[em]
         new_row = new_email_map.loc[em]
         # handle potential duplicates by taking first occurrence
-        if isinstance(old_row, pd.DataFrame):_
+        if isinstance(old_row, pd.DataFrame):
+            old_row = old_row.iloc[0]
+        if isinstance(new_row, pd.DataFrame):
+            new_row = new_row.iloc[0]
+        if str(old_row.get(primary_key, "")).strip() != str(new_row.get(primary_key, "")).strip():
+            rows.append({
+                "email": em,
+                "old_pk": str(old_row.get(primary_key, "")),
+                "new_pk": str(new_row.get(primary_key, "")),
+            })
+    write_csv(possible_rekeys_csv, rows, fieldnames=["email", "old_pk", "new_pk"])
+else:
+    write_csv(possible_rekeys_csv, [], fieldnames=["email", "old_pk", "new_pk"])
+
+# --------------------
+# Manifest (reproducibility)
+# --------------------
+manifest = {
+    "generated_at_utc": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+    "system": {
+        "python": platform.python_version(),
+        "os": platform.platform(),
+    },
+    "git_commit": safe_get_git_commit(),
+    "inputs": {
+        "old_csv": {"path": str(old_csv), "sha256": sha256_file(old_csv)},
+        "new_csv": {"path": str(new_csv), "sha256": sha256_file(new_csv)},
+        "script":  {"path": str((repo_root / 'src' / 'validate.py')), "sha256": sha256_file(repo_root / 'src' / 'validate.py')},
+    },
+    "outputs": {
+        "html": {"path": str(out_html), "sha256": None},  # filled after write
+        "row_counts_csv": str(row_counts_csv),
+        "duplicates_old_csv": str(duplicates_old_csv),
+        "duplicates_new_csv": str(duplicates_new_csv),
+        "nulls_summary_csv": str(nulls_summary_csv),
+        "schema_comparison_csv": str(schema_csv),
+        "missing_in_new_csv": str(missing_path),
+        "extra_in_new_csv": str(extra_path),
+        "possible_rekeys_csv": str(possible_rekeys_csv),
+        "allowed_deletions": sorted(ALLOWED_DELETIONS),
+        "allowed_additions": sorted(ALLOWED_ADDITIONS),
+    }
+}
+
+# --------------------
+# HTML helpers
+# --------------------
+def df_html_preview(df, cols=None, n=10):
+    if df.empty:
+        return "<em>None</em>"
+    if cols:
+        cols = [c for c in cols if c in df.columns]
+        if cols:
+            df = df[cols]
+    return df.head(n).to_html(index=False, border=0)
+
+def badge(status: str) -> str:
+    cls = "ok" if status == "PASS" else ("warn" if status == "WARN" else "fail")
+    return f'<span class="{cls}">{status}</span>'
+
+rows_html = "".join(
+    f"<tr><td>{name}</td><td>{badge(status)}</td><td>{notes}</td></tr>"
+    for name, status, notes in results
+)
+
+likely_cols = [primary_key, "email", "name", "first_name", "last_name"]
+missing_preview = df_html_preview(missing_in_new, cols=likely_cols)
+extra_preview   = df_html_preview(extra_in_new,   cols=likely_cols)
+
+# Differences section: show only if unexpected diffs exist
+if missing_count == 0 and extra_count == 0:
+    differences_section = ""
+else:
+    differences_section = f"""
+    <div class="section">
+      <h2>Key Differences</h2>
+      <p><strong>Missing in NEW:</strong> {missing_count} rows &nbsp;—&nbsp;
+         <a href="output/missing_in_new.csv">download CSV</a></p>
+      {missing_preview}
+      <p style="margin-top:1rem;"><strong>Extra in NEW:</strong> {extra_count} rows &nbsp;—&nbsp;
+         <a href="output/extra_in_new.csv">download CSV</a></p>
+      {extra_preview}
+    </div>
+    """
+
+# Proofs section (always shown)
+proof_links = [
+    ('Row counts (CSV)', 'output/row_counts.csv'),
+    ('Duplicates in OLD (CSV)', 'output/duplicates_old.csv'),
+    ('Duplicates in NEW (CSV)', 'output/duplicates_new.csv'),
+    ('Nulls summary (CSV)', 'output/nulls_summary.csv'),
+    ('Schema comparison (CSV)', 'output/schema_comparison.csv'),
+    ('Possible rekeys by email (CSV)', 'output/possible_rekeys.csv'),
+]
+
+proofs_html = "".join(
+    f'<li><a href="{href}">{label}</a></li>' for (label, href) in proof_links
+)
+
+# --------------------
+# Build HTML (Template is safe with CSS braces and %)
+# --------------------
+html_tpl = Template("""<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Data Migration Validation Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; max-width: 1100px; }
+    h1 { margin-top: 0; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #f6f6f6; }
+    .ok { color: #1a7f37; font-weight: 600; }
+    .warn { color: #d97706; font-weight: 600; }
+    .fail { color: #b91c1c; font-weight: 600; }
+    .meta { color: #555; margin: .25rem 0 .5rem; }
+    .section { margin-top: 1.5rem; }
+    a { text-decoration: none; }
+    .small { font-size: 0.9rem; color: #666; }
+    ul { margin: .5rem 0 0 1.2rem; }
+    code { background:#f6f6f6; padding:0 .25rem; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Data Migration Validation Report</h1>
+    <div class="meta">Source files: $old_name → $new_name</div>
+    <div class="small meta">
+      Exceptions applied:
+      <strong>Allowed deletions</strong> = $allowed_deletions &nbsp; | &nbsp;
+      <strong>Allowed additions</strong> = $allowed_additions
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Check</th><th>Status</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        $rows_html
+      </tbody>
+    </table>
+
+    $differences_section
+
+    <div class="section">
+      <h2>Proofs (downloadables)</h2>
+      <ul>
+        $proofs_html
+        <li><a href="output/manifest.json">Manifest (JSON with SHA-256, env, commit)</a></li>
+      </ul>
+      <p class="small">Tip: open <code>manifest.json</code> to see file hashes and the exact environment used.</p>
+    </div>
+  </div>
+</body>
+</html>
+""")
+
+html = html_tpl.substitute(
+    old_name=old_csv.name,
+    new_name=new_csv.name,
+    rows_html=rows_html,
+    allowed_deletions=", ".join(sorted(ALLOWED_DELETIONS)) or "None",
+    allowed_additions=", ".join(sorted(ALLOWED_ADDITIONS)) or "None",
+    differences_section=differences_section,
+    proofs_html=proofs_html,
+)
+
+out_html.write_text(html, encoding="utf-8")
+manifest["outputs"]["html"]["sha256"] = sha256_file(out_html)
+
+# Write manifest
+manifest_path = out_dir / "manifest.json"
+manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+
+print(f"Wrote: {out_html}")
+print(f"Proofs:")
+for p in [
+    row_counts_csv, duplicates_old_csv, duplicates_new_csv, nulls_summary_csv,
+    schema_csv, missing_path, extra_path, possible_rekeys_csv, manifest_path
+]:
+    print(f"  - {p.relative_to(repo_root)} (sha256={sha256_file(p)})")
