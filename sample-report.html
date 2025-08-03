@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; }
-    .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; max-width: 800px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; max-width: 900px; }
     h1 { margin-top: 0; }
     table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
@@ -14,23 +14,19 @@
     .ok { color: #1a7f37; font-weight: 600; }
     .warn { color: #d97706; font-weight: 600; }
     .fail { color: #b91c1c; font-weight: 600; }
+    .meta { color: #555; margin-top: .5rem; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Sample Data Migration Validation Report</h1>
-    <p>This is a placeholder page to verify GitHub Pages is working.</p>
+    <h1>Data Migration Validation Report</h1>
+    <div class="meta">Source files: old_customers.csv → new_customers.csv</div>
     <table>
       <thead>
-        <tr>
-          <th>Check</th><th>Status</th><th>Notes</th>
-        </tr>
+        <tr><th>Check</th><th>Status</th><th>Notes</th></tr>
       </thead>
       <tbody>
-        <tr><td>Row count match</td><td class="ok">PASS</td><td>Old vs New counts equal</td></tr>
-        <tr><td>Primary key duplicates</td><td class="ok">PASS</td><td>No duplicates detected</td></tr>
-        <tr><td>Nulls in required fields</td><td class="warn">WARN</td><td>2 rows with NULL in email</td></tr>
-        <tr><td>Value range checks</td><td class="ok">PASS</td><td>All within expected ranges</td></tr>
+        <tr><td>Row count match</td><td><span class="fail">FAIL</span></td><td>Old=1000, New=998</td></tr><tr><td>Primary key duplicates</td><td><span class="ok">PASS</span></td><td>Old dupes=0, New dupes=0</td></tr><tr><td>Nulls in required fields</td><td><span class="ok">PASS</span></td><td>email: Old=0, New=0</td></tr>
       </tbody>
     </table>
   </div>
