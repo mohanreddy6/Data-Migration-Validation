@@ -12,21 +12,22 @@ new_csv = repo_root / "sample_data" / "new_customers.csv"
 out_dir = repo_root / "output"
 out_dir.mkdir(exist_ok=True)
 
-# HTML at repo root so GitHub Pages can serve it
 out_html = repo_root / "sample-report.html"
 
 # --------------------
-# Config (edit for your data)
+# Config
 # --------------------
-primary_key = "customer_id"        # change if needed
-required_fields = ["email"]        # add more fields if needed
+primary_key = "customer_id"
+required_fields = ["email"]
+# columns to compare cell-by-cell (present in BOTH files)
+compare_columns = ["name", "email", "dob", "balance", "status"]
 
-# Expected differences (allowlist)
+# known, acceptable differences
 ALLOWED_DELETIONS = {"C100105", "C100521", "C100683", "C100690", "C100717"}
 ALLOWED_ADDITIONS = {"NEW0", "NEW1", "NEW2"}
 
-# Max rows to show inline for big tables
-INLINE_MAX_ROWS = 20
+# inline table row cap
+INLINE_MAX_ROWS = 5000  # to match your “first 5000” feel
 
 # --------------------
 # Load
@@ -34,110 +35,137 @@ INLINE_MAX_ROWS = 20
 old_df = pd.read_csv(old_csv, dtype=str)
 new_df = pd.read_csv(new_csv, dtype=str)
 
-# Normalize PK for matching (strings, trimmed)
-if primary_key not in old_df.columns:
-    raise KeyError(f"Primary key '{primary_key}' not found in OLD CSV: {old_csv.name}")
-if primary_key not in new_df.columns:
-    raise KeyError(f"Primary key '{primary_key}' not found in NEW CSV: {new_csv.name}")
+if primary_key not in old_df.columns or primary_key not in new_df.columns:
+    raise KeyError("Primary key missing in one of the CSVs")
 
-old_pk = old_df[primary_key].astype(str).str.strip()
-new_pk = new_df[primary_key].astype(str).str.strip()
+# normalize key
+old_df[primary_key] = old_df[primary_key].astype(str).str.strip()
+new_df[primary_key] = new_df[primary_key].astype(str).str.strip()
+
+old_pk = old_df[primary_key]
+new_pk = new_df[primary_key]
+
+# basic counts (raw)
+old_total = len(old_df)
+new_total = len(new_df)
 
 # --------------------
-# Checks
+# Checks (row count, dups, nulls)
 # --------------------
 results = []
 
-# 1) Row count match (adjusted by allowlists)
-adj_old = len(old_df) - old_pk.isin(ALLOWED_DELETIONS).sum()
-adj_new = len(new_df) - new_pk.isin(ALLOWED_ADDITIONS).sum()
-row_match = (adj_old == adj_new)
-results.append((
-    "Row count match",
-    "PASS" if row_match else "FAIL",
-    f"Old={len(old_df)} (adj {adj_old}), New={len(new_df)} (adj {adj_new})"
-))
+# row count (adjusted by allowlists)
+adj_old = old_total - old_pk.isin(ALLOWED_DELETIONS).sum()
+adj_new = new_total - new_pk.isin(ALLOWED_ADDITIONS).sum()
+row_match = adj_old == adj_new
+results.append(("Row count match", "PASS" if row_match else "FAIL",
+                f"Old={old_total} (adj {adj_old}), New={new_total} (adj {adj_new})"))
 
-# 2) Primary key duplicates (on normalized PK)
+# duplicate PK
 old_dups_ct = old_pk.duplicated().sum()
 new_dups_ct = new_pk.duplicated().sum()
 pk_ok = (old_dups_ct == 0) and (new_dups_ct == 0)
-results.append((
-    "Primary key duplicates",
-    "PASS" if pk_ok else "FAIL",
-    f"Old dupes={old_dups_ct}, New dupes={new_dups_ct}"
-))
+results.append(("Primary key duplicates", "PASS" if pk_ok else "FAIL",
+                f"Old dupes={old_dups_ct}, New dupes={new_dups_ct}"))
 
-# 3) Nulls in required fields
+# nulls
 null_rows = []
 null_ok = True
 for col in required_fields:
     old_val = old_df[col].isna().sum() if col in old_df.columns else "col-missing"
     new_val = new_df[col].isna().sum() if col in new_df.columns else "col-missing"
-    if isinstance(old_val, int) and old_val > 0:
-        null_ok = False
-    if isinstance(new_val, int) and new_val > 0:
-        null_ok = False
+    if isinstance(old_val, int) and old_val > 0: null_ok = False
+    if isinstance(new_val, int) and new_val > 0: null_ok = False
     null_rows.append({"field": col, "old_nulls": old_val, "new_nulls": new_val})
-results.append((
-    "Nulls in required fields",
-    "PASS" if null_ok else "WARN",
-    "; ".join([f"{r['field']}: Old={r['old_nulls']}, New={r['new_nulls']}" for r in null_rows])
-))
+results.append(("Nulls in required fields", "PASS" if null_ok else "WARN",
+                "; ".join([f"{r['field']}: Old={r['old_nulls']}, New={r['new_nulls']}" for r in null_rows])))
 
 # --------------------
-# Deltas (exclude allowlisted IDs)
+# Membership deltas (excluding allowlists)
 # --------------------
 old_keys = set(old_pk)
 new_keys = set(new_pk)
 
-missing_mask = (~old_pk.isin(new_keys)) & (~old_pk.isin(ALLOWED_DELETIONS))  # in old not new, not allowed
-extra_mask   = (~new_pk.isin(old_keys)) & (~new_pk.isin(ALLOWED_ADDITIONS))  # in new not old, not allowed
+only_in_old_keys = (old_keys - new_keys) - ALLOWED_DELETIONS
+only_in_new_keys = (new_keys - old_keys) - ALLOWED_ADDITIONS
 
-missing_in_new = old_df.loc[missing_mask].copy()
-extra_in_new   = new_df.loc[extra_mask].copy()
+only_in_old = old_df[old_df[primary_key].isin(only_in_old_keys)].copy()
+only_in_new = new_df[new_df[primary_key].isin(only_in_new_keys)].copy()
+
+# write CSVs
+(only_in_old.sort_values(primary_key)
+ .to_csv(out_dir / "only_in_old.csv", index=False))
+(only_in_new.sort_values(primary_key)
+ .to_csv(out_dir / "only_in_new.csv", index=False))
+
+# for backward-compat links
+only_in_old.to_csv(out_dir / "missing_in_new.csv", index=False)
+only_in_new.to_csv(out_dir / "extra_in_new.csv", index=False)
 
 # --------------------
-# Proof artifacts (CSV files)
+# Cell-by-cell mismatches on intersection keys
 # --------------------
-# Row counts (with adjustments)
-row_counts = pd.DataFrame([
-    {
-        "dataset": "OLD",
-        "raw_count": len(old_df),
-        "allowlisted_ids": int(old_pk.isin(ALLOWED_DELETIONS).sum()),
-        "adjusted_count": adj_old,
-    },
-    {
-        "dataset": "NEW",
-        "raw_count": len(new_df),
-        "allowlisted_ids": int(new_pk.isin(ALLOWED_ADDITIONS).sum()),
-        "adjusted_count": adj_new,
-    },
-])
-row_counts_path = out_dir / "row_counts.csv"
-row_counts.to_csv(row_counts_path, index=False)
+# compare on keys that exist in BOTH, excluding allowlists
+intersect_keys = (old_keys & new_keys) - ALLOWED_DELETIONS - ALLOWED_ADDITIONS
+old_int = old_df[old_df[primary_key].isin(intersect_keys)].copy()
+new_int = new_df[new_df[primary_key].isin(intersect_keys)].copy()
 
-# Duplicates detail (full rows for duplicated PKs)
+# ensure columns exist; keep only columns present in both
+common_cols = [c for c in compare_columns if c in old_int.columns and c in new_int.columns]
+compare_cols_note = ", ".join(common_cols)
+
+merged = old_int[[primary_key] + common_cols].merge(
+    new_int[[primary_key] + common_cols],
+    on=primary_key, how="inner", suffixes=("_old", "_new")
+)
+
+mismatch_rows = []
+for col in common_cols:
+    a = merged[f"{col}_old"].fillna("")
+    b = merged[f"{col}_new"].fillna("")
+    diff_mask = (a != b)
+    if diff_mask.any():
+        tmp = merged.loc[diff_mask, [primary_key, f"{col}_old", f"{col}_new"]].copy()
+        tmp.columns = [primary_key, "old_value", "new_value"]
+        tmp.insert(1, "column", col)
+        mismatch_rows.append(tmp)
+
+if mismatch_rows:
+    mismatches_df = pd.concat(mismatch_rows, ignore_index=True)
+else:
+    mismatches_df = pd.DataFrame(columns=[primary_key, "column", "old_value", "new_value"])
+
+mismatch_count = len(mismatches_df)
+mismatches_path = out_dir / "mismatches.csv"
+mismatches_df.to_csv(mismatches_path, index=False)
+
+# --------------------
+# Other proof artifacts
+# --------------------
+# row counts proof
+pd.DataFrame([
+    {"dataset": "OLD", "raw_count": old_total,
+     "allowlisted_ids": int(old_pk.isin(ALLOWED_DELETIONS).sum()),
+     "adjusted_count": adj_old},
+    {"dataset": "NEW", "raw_count": new_total,
+     "allowlisted_ids": int(new_pk.isin(ALLOWED_ADDITIONS).sum()),
+     "adjusted_count": adj_new},
+]).to_csv(out_dir / "row_counts.csv", index=False)
+
+# duplicates proof
 def duplicate_rows(df, pk_series):
     dup_keys = pk_series[pk_series.duplicated(keep=False)]
     if dup_keys.empty:
         return pd.DataFrame(columns=df.columns)
-    return df.loc[pk_series.isin(set(dup_keys))].copy().sort_values(by=pk_series.name)
+    return df[df[primary_key].isin(set(dup_keys))].copy().sort_values(primary_key)
 
-dups_old_df = duplicate_rows(old_df, old_pk.rename(primary_key))
-dups_new_df = duplicate_rows(new_df, new_pk.rename(primary_key))
-duplicates_old_path = out_dir / "duplicates_old.csv"
-duplicates_new_path = out_dir / "duplicates_new.csv"
-dups_old_df.to_csv(duplicates_old_path, index=False)
-dups_new_df.to_csv(duplicates_new_path, index=False)
+duplicate_rows(old_df, old_pk).to_csv(out_dir / "duplicates_old.csv", index=False)
+duplicate_rows(new_df, new_pk).to_csv(out_dir / "duplicates_new.csv", index=False)
 
-# Nulls summary
-nulls_summary = pd.DataFrame(null_rows)
-nulls_summary_path = out_dir / "nulls_summary.csv"
-nulls_summary.to_csv(nulls_summary_path, index=False)
+# nulls proof
+pd.DataFrame(null_rows).to_csv(out_dir / "nulls_summary.csv", index=False)
 
-# Schema comparison
+# schema proof
 all_cols = sorted(set(old_df.columns) | set(new_df.columns))
 schema_rows = []
 for c in all_cols:
@@ -148,17 +176,7 @@ for c in all_cols:
         "dtype_old": str(old_df[c].dtype) if c in old_df.columns else "",
         "dtype_new": str(new_df[c].dtype) if c in new_df.columns else "",
     })
-schema_cmp = pd.DataFrame(schema_rows)
-schema_cmp_path = out_dir / "schema_comparison.csv"
-schema_cmp.to_csv(schema_cmp_path, index=False)
-
-# Missing/Extra (unexpected only)
-missing_path = out_dir / "missing_in_new.csv"
-extra_path   = out_dir / "extra_in_new.csv"
-missing_in_new.to_csv(missing_path, index=False)
-extra_in_new.to_csv(extra_path, index=False)
-missing_count = len(missing_in_new)
-extra_count   = len(extra_in_new)
+pd.DataFrame(schema_rows).to_csv(out_dir / "schema_comparison.csv", index=False)
 
 # --------------------
 # HTML helpers
@@ -166,26 +184,12 @@ extra_count   = len(extra_in_new)
 def df_preview(df: pd.DataFrame, max_rows: int = INLINE_MAX_ROWS, cols=None) -> str:
     if df.empty:
         return "<em>None</em>"
-    show = df
-    if cols:
-        cols = [c for c in cols if c in df.columns]
-        if cols:
-            show = show[cols]
+    show = df if cols is None else df[[c for c in cols if c in df.columns]]
     if len(show) > max_rows:
         head = show.head(max_rows)
         html = head.to_html(index=False, border=0)
         return f'<div>{html}<div class="small">Showing first {max_rows} of {len(show)} rows</div></div>'
     return show.to_html(index=False, border=0)
-
-def section_with_download(title: str, csv_href: str, table_html: str, count_note: str = "") -> str:
-    note = f" — {count_note}" if count_note else ""
-    # Use details/summary to make large sections collapsible
-    return f"""
-    <details class="section" open>
-      <summary><strong>{title}</strong> <span class="small">{note}</span> — <a href="{csv_href}">download CSV</a></summary>
-      <div style="margin-top:.75rem">{table_html}</div>
-    </details>
-    """
 
 def badge(status: str) -> str:
     cls = "ok" if status == "PASS" else ("warn" if status == "WARN" else "fail")
@@ -196,56 +200,55 @@ rows_html = "".join(
     for name, status, notes in results
 )
 
-# Build each proof section (inline preview + download)
-likely_cols = [primary_key, "email", "name", "first_name", "last_name"]
+# badge-like pills summary
+pills_html = f"""
+  <span class="pill">Primary key: <strong>{primary_key}</strong></span>
+  <span class="pill">Columns: {', '.join(common_cols) or '—'}</span>
+  <span class="pill">OLD total: <strong>{old_total}</strong></span>
+  <span class="pill">NEW total: <strong>{new_total}</strong></span>
+  <span class="pill">Only in OLD: <strong>{len(only_in_old)}</strong></span>
+  <span class="pill">Only in NEW: <strong>{len(only_in_new)}</strong></span>
+  <span class="pill">Mismatches: <strong>{mismatch_count}</strong></span>
+"""
 
-row_counts_html = df_preview(row_counts)
-dups_old_html = df_preview(dups_old_df)
-dups_new_html = df_preview(dups_new_df)
-nulls_summary_html = df_preview(nulls_summary)
-schema_cmp_html = df_preview(schema_cmp)
-missing_html = df_preview(missing_in_new, cols=likely_cols)
-extra_html   = df_preview(extra_in_new,   cols=likely_cols)
+# mismatches table (first N)
+mismatches_html = df_preview(mismatches_df, max_rows=INLINE_MAX_ROWS,
+                             cols=[primary_key, "column", "old_value", "new_value"])
 
-proof_sections = []
+# proof sections (collapsible)
+def section_dl(title, path_rel, table_html, note=""):
+    small = f' <span class="small">{note}</span>' if note else ""
+    return f"""
+    <details class="section" open>
+      <summary><strong>{title}</strong>{small} — <a href="{path_rel}">download CSV</a></summary>
+      <div style="margin-top:.75rem">{table_html}</div>
+    </details>
+    """
 
-proof_sections.append(section_with_download(
-    "Row counts (raw & adjusted)", "output/row_counts.csv", row_counts_html))
-
-proof_sections.append(section_with_download(
-    "Primary key duplicates — OLD", "output/duplicates_old.csv", dups_old_html,
-    count_note=f"{len(dups_old_df)} rows"))
-
-proof_sections.append(section_with_download(
-    "Primary key duplicates — NEW", "output/duplicates_new.csv", dups_new_html,
-    count_note=f"{len(dups_new_df)} rows"))
-
-proof_sections.append(section_with_download(
-    "Nulls in required fields", "output/nulls_summary.csv", nulls_summary_html))
-
-proof_sections.append(section_with_download(
-    "Schema comparison", "output/schema_comparison.csv", schema_cmp_html,
-    count_note=f"{len(schema_cmp)} columns"))
-
-# Differences only if non-empty (but still provide download sections)
-if missing_count > 0 or extra_count > 0:
-    proof_sections.append(section_with_download(
-        "Missing in NEW (unexpected)", "output/missing_in_new.csv", missing_html,
-        count_note=f"{missing_count} rows"))
-    proof_sections.append(section_with_download(
-        "Extra in NEW (unexpected)", "output/extra_in_new.csv", extra_html,
-        count_note=f"{extra_count} rows"))
-else:
-    # still list as empty proofs for completeness
-    proof_sections.append(section_with_download(
-        "Missing in NEW (unexpected)", "output/missing_in_new.csv", "<em>None</em>", "0 rows"))
-    proof_sections.append(section_with_download(
-        "Extra in NEW (unexpected)", "output/extra_in_new.csv", "<em>None</em>", "0 rows"))
-
-proofs_html = "\n".join(proof_sections)
+proofs_html = "\n".join([
+    section_dl("Row counts (raw & adjusted)", "output/row_counts.csv",
+               df_preview(pd.read_csv(out_dir / "row_counts.csv"))),
+    section_dl("Primary key duplicates — OLD", "output/duplicates_old.csv",
+               df_preview(pd.read_csv(out_dir / "duplicates_old.csv")),
+               note=f"{len(pd.read_csv(out_dir / 'duplicates_old.csv'))} rows"),
+    section_dl("Primary key duplicates — NEW", "output/duplicates_new.csv",
+               df_preview(pd.read_csv(out_dir / "duplicates_new.csv")),
+               note=f"{len(pd.read_csv(out_dir / 'duplicates_new.csv'))} rows"),
+    section_dl("Nulls in required fields", "output/nulls_summary.csv",
+               df_preview(pd.read_csv(out_dir / "nulls_summary.csv"))),
+    section_dl("Schema comparison", "output/schema_comparison.csv",
+               df_preview(pd.read_csv(out_dir / "schema_comparison.csv")),
+               note=f"{len(pd.read_csv(out_dir / 'schema_comparison.csv'))} columns"),
+    section_dl("Only in OLD (unexpected)", "output/only_in_old.csv",
+               df_preview(only_in_old)),
+    section_dl("Only in NEW (unexpected)", "output/only_in_new.csv",
+               df_preview(only_in_new)),
+    section_dl("Mismatched Cells", "output/mismatches.csv",
+               mismatches_html, note=f"first {min(INLINE_MAX_ROWS, mismatch_count)} of {mismatch_count}")
+])
 
 # --------------------
-# Build HTML (Template is safe with CSS braces and %)
+# HTML
 # --------------------
 html_tpl = Template("""<!doctype html>
 <html>
@@ -254,19 +257,20 @@ html_tpl = Template("""<!doctype html>
   <title>Data Migration Validation Report</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; }
-    .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; max-width: 1100px; }
-    h1 { margin-top: 0; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; color:#111; }
+    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; max-width: 1100px; }
+    h1 { margin: 0 0 1rem 0; font-size: 2.2rem; }
+    .pill { display:inline-block; background:#f3f4f6; border:1px solid #e5e7eb; padding:.35rem .6rem; border-radius:999px; margin:.2rem .25rem; font-size:.95rem; }
     table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
-    th { background: #f6f6f6; }
-    .ok { color: #1a7f37; font-weight: 600; }
-    .warn { color: #d97706; font-weight: 600; }
-    .fail { color: #b91c1c; font-weight: 600; }
-    .meta { color: #555; margin-top: .5rem; }
+    th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
+    th { background: #f9fafb; }
+    .ok { color: #16a34a; font-weight: 700; }
+    .warn { color: #d97706; font-weight: 700; }
+    .fail { color: #dc2626; font-weight: 700; }
+    .meta { color: #4b5563; margin-top: .25rem; }
     .section { margin-top: 1.25rem; }
-    a { text-decoration: none; }
-    .small { font-size: 0.9rem; color: #666; }
+    .small { font-size: .9rem; color:#6b7280; }
+    a { text-decoration: none; color:#2563eb; }
     details > summary { cursor: pointer; list-style: none; }
     details > summary::-webkit-details-marker { display: none; }
     details > summary::before { content: "▸ "; }
@@ -276,25 +280,26 @@ html_tpl = Template("""<!doctype html>
 <body>
   <div class="card">
     <h1>Data Migration Validation Report</h1>
-    <div class="meta">Source files: $old_name → $new_name</div>
-    <div class="small meta">
-      Exceptions applied:
-      <strong>Allowed deletions</strong> = $allowed_deletions &nbsp; | &nbsp;
-      <strong>Allowed additions</strong> = $allowed_additions
-    </div>
+    <div>$pills_html</div>
 
     <table>
-      <thead>
-        <tr><th>Check</th><th>Status</th><th>Notes</th></tr>
-      </thead>
-      <tbody>
-        $rows_html
-      </tbody>
+      <thead><tr><th>Check</th><th>Status</th><th>Notes</th></tr></thead>
+      <tbody>$rows_html</tbody>
     </table>
+
+    <div class="section">
+      <h2>Mismatched Cells (first ${inline_cap})</h2>
+      $mismatches_html
+      <div class="small"><a href="output/mismatches.csv">Download full mismatches CSV</a></div>
+    </div>
 
     <div class="section">
       <h2>Proofs (inline previews + downloads)</h2>
       $proofs_html
+    </div>
+
+    <div class="meta small">
+      Exceptions applied — Allowed deletions: $allowed_deletions | Allowed additions: $allowed_additions
     </div>
   </div>
 </body>
@@ -302,15 +307,15 @@ html_tpl = Template("""<!doctype html>
 """)
 
 html = html_tpl.substitute(
-    old_name=old_csv.name,
-    new_name=new_csv.name,
+    pills_html=pills_html,
     rows_html=rows_html,
+    mismatches_html=mismatches_html,
+    inline_cap=INLINE_MAX_ROWS,
+    proofs_html=proofs_html,
     allowed_deletions=", ".join(sorted(ALLOWED_DELETIONS)) or "None",
     allowed_additions=", ".join(sorted(ALLOWED_ADDITIONS)) or "None",
-    proofs_html=proofs_html,
 )
 
 out_html.write_text(html, encoding="utf-8")
-
 print(f"Wrote: {out_html}")
-print(f"Proofs saved to: {out_dir}")
+print(f"Mismatches: {mismatch_count} -> {mismatches_path}")
