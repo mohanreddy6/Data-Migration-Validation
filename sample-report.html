@@ -15,9 +15,13 @@
     .warn { color: #d97706; font-weight: 600; }
     .fail { color: #b91c1c; font-weight: 600; }
     .meta { color: #555; margin-top: .5rem; }
-    .section { margin-top: 1.5rem; }
+    .section { margin-top: 1.25rem; }
     a { text-decoration: none; }
     .small { font-size: 0.9rem; color: #666; }
+    details > summary { cursor: pointer; list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::before { content: "▸ "; }
+    details[open] > summary::before { content: "▾ "; }
   </style>
 </head>
 <body>
@@ -39,11 +43,142 @@
       </tbody>
     </table>
 
+    <div class="section">
+      <h2>Proofs (inline previews + downloads)</h2>
+      
+    <details class="section" open>
+      <summary><strong>Row counts (raw & adjusted)</strong> <span class="small"></span> — <a href="output/row_counts.csv">download CSV</a></summary>
+      <div style="margin-top:.75rem"><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>dataset</th>
+      <th>raw_count</th>
+      <th>allowlisted_ids</th>
+      <th>adjusted_count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>OLD</td>
+      <td>1000</td>
+      <td>5</td>
+      <td>995</td>
+    </tr>
+    <tr>
+      <td>NEW</td>
+      <td>998</td>
+      <td>3</td>
+      <td>995</td>
+    </tr>
+  </tbody>
+</table></div>
+    </details>
     
 
-    <div class="section">
-      <h2>Proofs (downloadable)</h2>
-      <ul><li><a href="output/row_counts.csv">Row counts (raw/adjusted)</a></li><li><a href="output/duplicates_old.csv">Primary key duplicates — OLD</a></li><li><a href="output/duplicates_new.csv">Primary key duplicates — NEW</a></li><li><a href="output/nulls_summary.csv">Nulls in required fields</a></li><li><a href="output/schema_comparison.csv">Schema comparison</a></li><li><a href="output/missing_in_new.csv">Missing in NEW (unexpected)</a></li><li><a href="output/extra_in_new.csv">Extra in NEW (unexpected)</a></li></ul>
+    <details class="section" open>
+      <summary><strong>Primary key duplicates — OLD</strong> <span class="small"> — 0 rows</span> — <a href="output/duplicates_old.csv">download CSV</a></summary>
+      <div style="margin-top:.75rem"><em>None</em></div>
+    </details>
+    
+
+    <details class="section" open>
+      <summary><strong>Primary key duplicates — NEW</strong> <span class="small"> — 0 rows</span> — <a href="output/duplicates_new.csv">download CSV</a></summary>
+      <div style="margin-top:.75rem"><em>None</em></div>
+    </details>
+    
+
+    <details class="section" open>
+      <summary><strong>Nulls in required fields</strong> <span class="small"></span> — <a href="output/nulls_summary.csv">download CSV</a></summary>
+      <div style="margin-top:.75rem"><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>field</th>
+      <th>old_nulls</th>
+      <th>new_nulls</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>email</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table></div>
+    </details>
+    
+
+    <details class="section" open>
+      <summary><strong>Schema comparison</strong> <span class="small"> — 6 columns</span> — <a href="output/schema_comparison.csv">download CSV</a></summary>
+      <div style="margin-top:.75rem"><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>column</th>
+      <th>present_in_old</th>
+      <th>present_in_new</th>
+      <th>dtype_old</th>
+      <th>dtype_new</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>balance</td>
+      <td>True</td>
+      <td>True</td>
+      <td>object</td>
+      <td>object</td>
+    </tr>
+    <tr>
+      <td>customer_id</td>
+      <td>True</td>
+      <td>True</td>
+      <td>object</td>
+      <td>object</td>
+    </tr>
+    <tr>
+      <td>dob</td>
+      <td>True</td>
+      <td>True</td>
+      <td>object</td>
+      <td>object</td>
+    </tr>
+    <tr>
+      <td>email</td>
+      <td>True</td>
+      <td>True</td>
+      <td>object</td>
+      <td>object</td>
+    </tr>
+    <tr>
+      <td>name</td>
+      <td>True</td>
+      <td>True</td>
+      <td>object</td>
+      <td>object</td>
+    </tr>
+    <tr>
+      <td>status</td>
+      <td>True</td>
+      <td>True</td>
+      <td>object</td>
+      <td>object</td>
+    </tr>
+  </tbody>
+</table></div>
+    </details>
+    
+
+    <details class="section" open>
+      <summary><strong>Missing in NEW (unexpected)</strong> <span class="small"> — 0 rows</span> — <a href="output/missing_in_new.csv">download CSV</a></summary>
+      <div style="margin-top:.75rem"><em>None</em></div>
+    </details>
+    
+
+    <details class="section" open>
+      <summary><strong>Extra in NEW (unexpected)</strong> <span class="small"> — 0 rows</span> — <a href="output/extra_in_new.csv">download CSV</a></summary>
+      <div style="margin-top:.75rem"><em>None</em></div>
+    </details>
+    
     </div>
   </div>
 </body>
