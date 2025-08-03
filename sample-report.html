@@ -5,19 +5,20 @@
   <title>Data Migration Validation Report</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; }
-    .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; max-width: 1100px; }
-    h1 { margin-top: 0; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; color:#111; }
+    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; max-width: 1100px; }
+    h1 { margin: 0 0 1rem 0; font-size: 2.2rem; }
+    .pill { display:inline-block; background:#f3f4f6; border:1px solid #e5e7eb; padding:.35rem .6rem; border-radius:999px; margin:.2rem .25rem; font-size:.95rem; }
     table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
-    th { background: #f6f6f6; }
-    .ok { color: #1a7f37; font-weight: 600; }
-    .warn { color: #d97706; font-weight: 600; }
-    .fail { color: #b91c1c; font-weight: 600; }
-    .meta { color: #555; margin-top: .5rem; }
+    th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
+    th { background: #f9fafb; }
+    .ok { color: #16a34a; font-weight: 700; }
+    .warn { color: #d97706; font-weight: 700; }
+    .fail { color: #dc2626; font-weight: 700; }
+    .meta { color: #4b5563; margin-top: .25rem; }
     .section { margin-top: 1.25rem; }
-    a { text-decoration: none; }
-    .small { font-size: 0.9rem; color: #666; }
+    .small { font-size: .9rem; color:#6b7280; }
+    a { text-decoration: none; color:#2563eb; }
     details > summary { cursor: pointer; list-style: none; }
     details > summary::-webkit-details-marker { display: none; }
     details > summary::before { content: "▸ "; }
@@ -27,27 +28,331 @@
 <body>
   <div class="card">
     <h1>Data Migration Validation Report</h1>
-    <div class="meta">Source files: old_customers.csv → new_customers.csv</div>
-    <div class="small meta">
-      Exceptions applied:
-      <strong>Allowed deletions</strong> = C100105, C100521, C100683, C100690, C100717 &nbsp; | &nbsp;
-      <strong>Allowed additions</strong> = NEW0, NEW1, NEW2
-    </div>
+    <div>
+  <span class="pill">Primary key: <strong>customer_id</strong></span>
+  <span class="pill">Columns: name, email, dob, balance, status</span>
+  <span class="pill">OLD total: <strong>1000</strong></span>
+  <span class="pill">NEW total: <strong>998</strong></span>
+  <span class="pill">Only in OLD: <strong>0</strong></span>
+  <span class="pill">Only in NEW: <strong>0</strong></span>
+  <span class="pill">Mismatches: <strong>48</strong></span>
+</div>
 
     <table>
-      <thead>
-        <tr><th>Check</th><th>Status</th><th>Notes</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Row count match</td><td><span class="ok">PASS</span></td><td>Old=1000 (adj 995), New=998 (adj 995)</td></tr><tr><td>Primary key duplicates</td><td><span class="ok">PASS</span></td><td>Old dupes=0, New dupes=0</td></tr><tr><td>Nulls in required fields</td><td><span class="ok">PASS</span></td><td>email: Old=0, New=0</td></tr>
-      </tbody>
+      <thead><tr><th>Check</th><th>Status</th><th>Notes</th></tr></thead>
+      <tbody><tr><td>Row count match</td><td><span class="ok">PASS</span></td><td>Old=1000 (adj 995), New=998 (adj 995)</td></tr><tr><td>Primary key duplicates</td><td><span class="ok">PASS</span></td><td>Old dupes=0, New dupes=0</td></tr><tr><td>Nulls in required fields</td><td><span class="ok">PASS</span></td><td>email: Old=0, New=0</td></tr></tbody>
     </table>
+
+    <div class="section">
+      <h2>Mismatched Cells (first 5000)</h2>
+      <table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>customer_id</th>
+      <th>column</th>
+      <th>old_value</th>
+      <th>new_value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>C100033</td>
+      <td>name</td>
+      <td>Customer 33</td>
+      <td>Customer 33 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100415</td>
+      <td>name</td>
+      <td>Customer 415</td>
+      <td>Customer 415 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100431</td>
+      <td>name</td>
+      <td>Customer 431</td>
+      <td>Customer 431 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100448</td>
+      <td>name</td>
+      <td>Customer 448</td>
+      <td>Customer 448 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100528</td>
+      <td>name</td>
+      <td>Customer 528</td>
+      <td>Customer 528 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100577</td>
+      <td>name</td>
+      <td>Customer 577</td>
+      <td>Customer 577 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100664</td>
+      <td>name</td>
+      <td>Customer 664</td>
+      <td>Customer 664 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100728</td>
+      <td>name</td>
+      <td>Customer 728</td>
+      <td>Customer 728 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100747</td>
+      <td>name</td>
+      <td>Customer 747</td>
+      <td>Customer 747 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100774</td>
+      <td>name</td>
+      <td>Customer 774</td>
+      <td>Customer 774 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100850</td>
+      <td>name</td>
+      <td>Customer 850</td>
+      <td>Customer 850 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100866</td>
+      <td>name</td>
+      <td>Customer 866</td>
+      <td>Customer 866 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100936</td>
+      <td>name</td>
+      <td>Customer 936</td>
+      <td>Customer 936 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100986</td>
+      <td>name</td>
+      <td>Customer 986</td>
+      <td>Customer 986 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100023</td>
+      <td>email</td>
+      <td>user23@example.com</td>
+      <td>updated_user23@example.com</td>
+    </tr>
+    <tr>
+      <td>C100250</td>
+      <td>email</td>
+      <td>user250@example.com</td>
+      <td>updated_user250@example.com</td>
+    </tr>
+    <tr>
+      <td>C100257</td>
+      <td>email</td>
+      <td>user257@example.com</td>
+      <td>updated_user257@example.com</td>
+    </tr>
+    <tr>
+      <td>C100285</td>
+      <td>email</td>
+      <td>user285@example.com</td>
+      <td>updated_user285@example.com</td>
+    </tr>
+    <tr>
+      <td>C100396</td>
+      <td>email</td>
+      <td>user396@example.com</td>
+      <td>updated_user396@example.com</td>
+    </tr>
+    <tr>
+      <td>C100417</td>
+      <td>email</td>
+      <td>user417@example.com</td>
+      <td>updated_user417@example.com</td>
+    </tr>
+    <tr>
+      <td>C100449</td>
+      <td>email</td>
+      <td>user449@example.com</td>
+      <td>updated_user449@example.com</td>
+    </tr>
+    <tr>
+      <td>C100501</td>
+      <td>email</td>
+      <td>user501@example.com</td>
+      <td>updated_user501@example.com</td>
+    </tr>
+    <tr>
+      <td>C100716</td>
+      <td>email</td>
+      <td>user716@example.com</td>
+      <td>updated_user716@example.com</td>
+    </tr>
+    <tr>
+      <td>C100771</td>
+      <td>email</td>
+      <td>user771@example.com</td>
+      <td>updated_user771@example.com</td>
+    </tr>
+    <tr>
+      <td>C100840</td>
+      <td>email</td>
+      <td>user840@example.com</td>
+      <td>updated_user840@example.com</td>
+    </tr>
+    <tr>
+      <td>C100987</td>
+      <td>email</td>
+      <td>user987@example.com</td>
+      <td>updated_user987@example.com</td>
+    </tr>
+    <tr>
+      <td>C100026</td>
+      <td>balance</td>
+      <td>1996.74</td>
+      <td>2001.39</td>
+    </tr>
+    <tr>
+      <td>C100217</td>
+      <td>balance</td>
+      <td>7464.91</td>
+      <td>7914.82</td>
+    </tr>
+    <tr>
+      <td>C100251</td>
+      <td>balance</td>
+      <td>3850.98</td>
+      <td>4234.25</td>
+    </tr>
+    <tr>
+      <td>C100269</td>
+      <td>balance</td>
+      <td>2935.92</td>
+      <td>3227.26</td>
+    </tr>
+    <tr>
+      <td>C100276</td>
+      <td>balance</td>
+      <td>7982.95</td>
+      <td>8096.57</td>
+    </tr>
+    <tr>
+      <td>C100286</td>
+      <td>balance</td>
+      <td>4655.98</td>
+      <td>4902.14</td>
+    </tr>
+    <tr>
+      <td>C100292</td>
+      <td>balance</td>
+      <td>8226.01</td>
+      <td>8355.72</td>
+    </tr>
+    <tr>
+      <td>C100598</td>
+      <td>balance</td>
+      <td>1922.89</td>
+      <td>2012.5</td>
+    </tr>
+    <tr>
+      <td>C100660</td>
+      <td>balance</td>
+      <td>3560.97</td>
+      <td>3809.65</td>
+    </tr>
+    <tr>
+      <td>C100700</td>
+      <td>balance</td>
+      <td>5325.89</td>
+      <td>4807.89</td>
+    </tr>
+    <tr>
+      <td>C100795</td>
+      <td>balance</td>
+      <td>8721.24</td>
+      <td>7876.58</td>
+    </tr>
+    <tr>
+      <td>C100913</td>
+      <td>balance</td>
+      <td>4094.12</td>
+      <td>4160.4</td>
+    </tr>
+    <tr>
+      <td>C100932</td>
+      <td>balance</td>
+      <td>9844.02</td>
+      <td>10687.03</td>
+    </tr>
+    <tr>
+      <td>C100949</td>
+      <td>balance</td>
+      <td>5974.13</td>
+      <td>5403.51</td>
+    </tr>
+    <tr>
+      <td>C100989</td>
+      <td>balance</td>
+      <td>8191.02</td>
+      <td>8909.23</td>
+    </tr>
+    <tr>
+      <td>C100013</td>
+      <td>status</td>
+      <td>active</td>
+      <td>pending</td>
+    </tr>
+    <tr>
+      <td>C100050</td>
+      <td>status</td>
+      <td>inactive</td>
+      <td>pending</td>
+    </tr>
+    <tr>
+      <td>C100100</td>
+      <td>status</td>
+      <td>active</td>
+      <td>pending</td>
+    </tr>
+    <tr>
+      <td>C100447</td>
+      <td>status</td>
+      <td>inactive</td>
+      <td>pending</td>
+    </tr>
+    <tr>
+      <td>C100539</td>
+      <td>status</td>
+      <td>active</td>
+      <td>pending</td>
+    </tr>
+    <tr>
+      <td>C100877</td>
+      <td>status</td>
+      <td>active</td>
+      <td>inactive</td>
+    </tr>
+    <tr>
+      <td>C100906</td>
+      <td>status</td>
+      <td>pending</td>
+      <td>active</td>
+    </tr>
+  </tbody>
+</table>
+      <div class="small"><a href="output/mismatches.csv">Download full mismatches CSV</a></div>
+    </div>
 
     <div class="section">
       <h2>Proofs (inline previews + downloads)</h2>
       
     <details class="section" open>
-      <summary><strong>Row counts (raw & adjusted)</strong> <span class="small"></span> — <a href="output/row_counts.csv">download CSV</a></summary>
+      <summary><strong>Row counts (raw & adjusted)</strong> — <a href="output/row_counts.csv">download CSV</a></summary>
       <div style="margin-top:.75rem"><table class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -76,19 +381,19 @@
     
 
     <details class="section" open>
-      <summary><strong>Primary key duplicates — OLD</strong> <span class="small"> — 0 rows</span> — <a href="output/duplicates_old.csv">download CSV</a></summary>
+      <summary><strong>Primary key duplicates — OLD</strong> <span class="small">0 rows</span> — <a href="output/duplicates_old.csv">download CSV</a></summary>
       <div style="margin-top:.75rem"><em>None</em></div>
     </details>
     
 
     <details class="section" open>
-      <summary><strong>Primary key duplicates — NEW</strong> <span class="small"> — 0 rows</span> — <a href="output/duplicates_new.csv">download CSV</a></summary>
+      <summary><strong>Primary key duplicates — NEW</strong> <span class="small">0 rows</span> — <a href="output/duplicates_new.csv">download CSV</a></summary>
       <div style="margin-top:.75rem"><em>None</em></div>
     </details>
     
 
     <details class="section" open>
-      <summary><strong>Nulls in required fields</strong> <span class="small"></span> — <a href="output/nulls_summary.csv">download CSV</a></summary>
+      <summary><strong>Nulls in required fields</strong> — <a href="output/nulls_summary.csv">download CSV</a></summary>
       <div style="margin-top:.75rem"><table class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -109,7 +414,7 @@
     
 
     <details class="section" open>
-      <summary><strong>Schema comparison</strong> <span class="small"> — 6 columns</span> — <a href="output/schema_comparison.csv">download CSV</a></summary>
+      <summary><strong>Schema comparison</strong> <span class="small">6 columns</span> — <a href="output/schema_comparison.csv">download CSV</a></summary>
       <div style="margin-top:.75rem"><table class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -169,16 +474,325 @@
     
 
     <details class="section" open>
-      <summary><strong>Missing in NEW (unexpected)</strong> <span class="small"> — 0 rows</span> — <a href="output/missing_in_new.csv">download CSV</a></summary>
+      <summary><strong>Only in OLD (unexpected)</strong> — <a href="output/only_in_old.csv">download CSV</a></summary>
       <div style="margin-top:.75rem"><em>None</em></div>
     </details>
     
 
     <details class="section" open>
-      <summary><strong>Extra in NEW (unexpected)</strong> <span class="small"> — 0 rows</span> — <a href="output/extra_in_new.csv">download CSV</a></summary>
+      <summary><strong>Only in NEW (unexpected)</strong> — <a href="output/only_in_new.csv">download CSV</a></summary>
       <div style="margin-top:.75rem"><em>None</em></div>
     </details>
     
+
+    <details class="section" open>
+      <summary><strong>Mismatched Cells</strong> <span class="small">first 48 of 48</span> — <a href="output/mismatches.csv">download CSV</a></summary>
+      <div style="margin-top:.75rem"><table class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>customer_id</th>
+      <th>column</th>
+      <th>old_value</th>
+      <th>new_value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>C100033</td>
+      <td>name</td>
+      <td>Customer 33</td>
+      <td>Customer 33 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100415</td>
+      <td>name</td>
+      <td>Customer 415</td>
+      <td>Customer 415 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100431</td>
+      <td>name</td>
+      <td>Customer 431</td>
+      <td>Customer 431 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100448</td>
+      <td>name</td>
+      <td>Customer 448</td>
+      <td>Customer 448 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100528</td>
+      <td>name</td>
+      <td>Customer 528</td>
+      <td>Customer 528 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100577</td>
+      <td>name</td>
+      <td>Customer 577</td>
+      <td>Customer 577 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100664</td>
+      <td>name</td>
+      <td>Customer 664</td>
+      <td>Customer 664 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100728</td>
+      <td>name</td>
+      <td>Customer 728</td>
+      <td>Customer 728 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100747</td>
+      <td>name</td>
+      <td>Customer 747</td>
+      <td>Customer 747 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100774</td>
+      <td>name</td>
+      <td>Customer 774</td>
+      <td>Customer 774 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100850</td>
+      <td>name</td>
+      <td>Customer 850</td>
+      <td>Customer 850 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100866</td>
+      <td>name</td>
+      <td>Customer 866</td>
+      <td>Customer 866 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100936</td>
+      <td>name</td>
+      <td>Customer 936</td>
+      <td>Customer 936 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100986</td>
+      <td>name</td>
+      <td>Customer 986</td>
+      <td>Customer 986 Jr.</td>
+    </tr>
+    <tr>
+      <td>C100023</td>
+      <td>email</td>
+      <td>user23@example.com</td>
+      <td>updated_user23@example.com</td>
+    </tr>
+    <tr>
+      <td>C100250</td>
+      <td>email</td>
+      <td>user250@example.com</td>
+      <td>updated_user250@example.com</td>
+    </tr>
+    <tr>
+      <td>C100257</td>
+      <td>email</td>
+      <td>user257@example.com</td>
+      <td>updated_user257@example.com</td>
+    </tr>
+    <tr>
+      <td>C100285</td>
+      <td>email</td>
+      <td>user285@example.com</td>
+      <td>updated_user285@example.com</td>
+    </tr>
+    <tr>
+      <td>C100396</td>
+      <td>email</td>
+      <td>user396@example.com</td>
+      <td>updated_user396@example.com</td>
+    </tr>
+    <tr>
+      <td>C100417</td>
+      <td>email</td>
+      <td>user417@example.com</td>
+      <td>updated_user417@example.com</td>
+    </tr>
+    <tr>
+      <td>C100449</td>
+      <td>email</td>
+      <td>user449@example.com</td>
+      <td>updated_user449@example.com</td>
+    </tr>
+    <tr>
+      <td>C100501</td>
+      <td>email</td>
+      <td>user501@example.com</td>
+      <td>updated_user501@example.com</td>
+    </tr>
+    <tr>
+      <td>C100716</td>
+      <td>email</td>
+      <td>user716@example.com</td>
+      <td>updated_user716@example.com</td>
+    </tr>
+    <tr>
+      <td>C100771</td>
+      <td>email</td>
+      <td>user771@example.com</td>
+      <td>updated_user771@example.com</td>
+    </tr>
+    <tr>
+      <td>C100840</td>
+      <td>email</td>
+      <td>user840@example.com</td>
+      <td>updated_user840@example.com</td>
+    </tr>
+    <tr>
+      <td>C100987</td>
+      <td>email</td>
+      <td>user987@example.com</td>
+      <td>updated_user987@example.com</td>
+    </tr>
+    <tr>
+      <td>C100026</td>
+      <td>balance</td>
+      <td>1996.74</td>
+      <td>2001.39</td>
+    </tr>
+    <tr>
+      <td>C100217</td>
+      <td>balance</td>
+      <td>7464.91</td>
+      <td>7914.82</td>
+    </tr>
+    <tr>
+      <td>C100251</td>
+      <td>balance</td>
+      <td>3850.98</td>
+      <td>4234.25</td>
+    </tr>
+    <tr>
+      <td>C100269</td>
+      <td>balance</td>
+      <td>2935.92</td>
+      <td>3227.26</td>
+    </tr>
+    <tr>
+      <td>C100276</td>
+      <td>balance</td>
+      <td>7982.95</td>
+      <td>8096.57</td>
+    </tr>
+    <tr>
+      <td>C100286</td>
+      <td>balance</td>
+      <td>4655.98</td>
+      <td>4902.14</td>
+    </tr>
+    <tr>
+      <td>C100292</td>
+      <td>balance</td>
+      <td>8226.01</td>
+      <td>8355.72</td>
+    </tr>
+    <tr>
+      <td>C100598</td>
+      <td>balance</td>
+      <td>1922.89</td>
+      <td>2012.5</td>
+    </tr>
+    <tr>
+      <td>C100660</td>
+      <td>balance</td>
+      <td>3560.97</td>
+      <td>3809.65</td>
+    </tr>
+    <tr>
+      <td>C100700</td>
+      <td>balance</td>
+      <td>5325.89</td>
+      <td>4807.89</td>
+    </tr>
+    <tr>
+      <td>C100795</td>
+      <td>balance</td>
+      <td>8721.24</td>
+      <td>7876.58</td>
+    </tr>
+    <tr>
+      <td>C100913</td>
+      <td>balance</td>
+      <td>4094.12</td>
+      <td>4160.4</td>
+    </tr>
+    <tr>
+      <td>C100932</td>
+      <td>balance</td>
+      <td>9844.02</td>
+      <td>10687.03</td>
+    </tr>
+    <tr>
+      <td>C100949</td>
+      <td>balance</td>
+      <td>5974.13</td>
+      <td>5403.51</td>
+    </tr>
+    <tr>
+      <td>C100989</td>
+      <td>balance</td>
+      <td>8191.02</td>
+      <td>8909.23</td>
+    </tr>
+    <tr>
+      <td>C100013</td>
+      <td>status</td>
+      <td>active</td>
+      <td>pending</td>
+    </tr>
+    <tr>
+      <td>C100050</td>
+      <td>status</td>
+      <td>inactive</td>
+      <td>pending</td>
+    </tr>
+    <tr>
+      <td>C100100</td>
+      <td>status</td>
+      <td>active</td>
+      <td>pending</td>
+    </tr>
+    <tr>
+      <td>C100447</td>
+      <td>status</td>
+      <td>inactive</td>
+      <td>pending</td>
+    </tr>
+    <tr>
+      <td>C100539</td>
+      <td>status</td>
+      <td>active</td>
+      <td>pending</td>
+    </tr>
+    <tr>
+      <td>C100877</td>
+      <td>status</td>
+      <td>active</td>
+      <td>inactive</td>
+    </tr>
+    <tr>
+      <td>C100906</td>
+      <td>status</td>
+      <td>pending</td>
+      <td>active</td>
+    </tr>
+  </tbody>
+</table></div>
+    </details>
+    
+    </div>
+
+    <div class="meta small">
+      Exceptions applied — Allowed deletions: C100105, C100521, C100683, C100690, C100717 | Allowed additions: NEW0, NEW1, NEW2
     </div>
   </div>
 </body>

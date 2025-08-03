@@ -27,7 +27,7 @@ ALLOWED_DELETIONS = {"C100105", "C100521", "C100683", "C100690", "C100717"}
 ALLOWED_ADDITIONS = {"NEW0", "NEW1", "NEW2"}
 
 # inline table row cap
-INLINE_MAX_ROWS = 5000  # to match your “first 5000” feel
+INLINE_MAX_ROWS = 5000  # to match your "first 5000" feel
 
 # --------------------
 # Load
@@ -74,8 +74,10 @@ null_ok = True
 for col in required_fields:
     old_val = old_df[col].isna().sum() if col in old_df.columns else "col-missing"
     new_val = new_df[col].isna().sum() if col in new_df.columns else "col-missing"
-    if isinstance(old_val, int) and old_val > 0: null_ok = False
-    if isinstance(new_val, int) and new_val > 0: null_ok = False
+    if isinstance(old_val, int) and old_val > 0:
+        null_ok = False
+    if isinstance(new_val, int) and new_val > 0:
+        null_ok = False
     null_rows.append({"field": col, "old_nulls": old_val, "new_nulls": new_val})
 results.append(("Nulls in required fields", "PASS" if null_ok else "WARN",
                 "; ".join([f"{r['field']}: Old={r['old_nulls']}, New={r['new_nulls']}" for r in null_rows])))
@@ -112,7 +114,6 @@ new_int = new_df[new_df[primary_key].isin(intersect_keys)].copy()
 
 # ensure columns exist; keep only columns present in both
 common_cols = [c for c in compare_columns if c in old_int.columns and c in new_int.columns]
-compare_cols_note = ", ".join(common_cols)
 
 merged = old_int[[primary_key] + common_cols].merge(
     new_int[[primary_key] + common_cols],

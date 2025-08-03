@@ -1,0 +1,49 @@
+customer_id,column,old_value,new_value
+C100033,name,Customer 33,Customer 33 Jr.
+C100415,name,Customer 415,Customer 415 Jr.
+C100431,name,Customer 431,Customer 431 Jr.
+C100448,name,Customer 448,Customer 448 Jr.
+C100528,name,Customer 528,Customer 528 Jr.
+C100577,name,Customer 577,Customer 577 Jr.
+C100664,name,Customer 664,Customer 664 Jr.
+C100728,name,Customer 728,Customer 728 Jr.
+C100747,name,Customer 747,Customer 747 Jr.
+C100774,name,Customer 774,Customer 774 Jr.
+C100850,name,Customer 850,Customer 850 Jr.
+C100866,name,Customer 866,Customer 866 Jr.
+C100936,name,Customer 936,Customer 936 Jr.
+C100986,name,Customer 986,Customer 986 Jr.
+C100023,email,user23@example.com,updated_user23@example.com
+C100250,email,user250@example.com,updated_user250@example.com
+C100257,email,user257@example.com,updated_user257@example.com
+C100285,email,user285@example.com,updated_user285@example.com
+C100396,email,user396@example.com,updated_user396@example.com
+C100417,email,user417@example.com,updated_user417@example.com
+C100449,email,user449@example.com,updated_user449@example.com
+C100501,email,user501@example.com,updated_user501@example.com
+C100716,email,user716@example.com,updated_user716@example.com
+C100771,email,user771@example.com,updated_user771@example.com
+C100840,email,user840@example.com,updated_user840@example.com
+C100987,email,user987@example.com,updated_user987@example.com
+C100026,balance,1996.74,2001.39
+C100217,balance,7464.91,7914.82
+C100251,balance,3850.98,4234.25
+C100269,balance,2935.92,3227.26
+C100276,balance,7982.95,8096.57
+C100286,balance,4655.98,4902.14
+C100292,balance,8226.01,8355.72
+C100598,balance,1922.89,2012.5
+C100660,balance,3560.97,3809.65
+C100700,balance,5325.89,4807.89
+C100795,balance,8721.24,7876.58
+C100913,balance,4094.12,4160.4
+C100932,balance,9844.02,10687.03
+C100949,balance,5974.13,5403.51
+C100989,balance,8191.02,8909.23
+C100013,status,active,pending
+C100050,status,inactive,pending
+C100100,status,active,pending
+C100447,status,inactive,pending
+C100539,status,active,pending
+C100877,status,active,inactive
+C100906,status,pending,active
