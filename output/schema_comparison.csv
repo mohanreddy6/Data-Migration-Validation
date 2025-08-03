@@ -1,4 +1,4 @@
-column,in_old,in_new,old_dtype,new_dtype
+column,present_in_old,present_in_new,dtype_old,dtype_new
 balance,True,True,object,object
 customer_id,True,True,object,object
 dob,True,True,object,object
