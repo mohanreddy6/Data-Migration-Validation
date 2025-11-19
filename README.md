@@ -164,6 +164,9 @@ Data-Migration-Validation/
 
 ## 📊 Flowchart (Data Migration Validation)
 
+```mermaid
+<PASTE THE CODE HERE>
+flowchart TD
 
     A[Start] --> B[Load OLD Dataset (100 Records)]
     B --> C[Load NEW Dataset (100 Records)]
@@ -185,5 +188,6 @@ Data-Migration-Validation/
     I --> J[Publish via GitHub Pages]
 
     J --> K[End - Report Ready]
+
 
 
