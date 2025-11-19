@@ -1,115 +1,109 @@
-# Data Migration Validation Tool
-<p class="small">
-  Project: Customer & account master migration for a telecom client (Accenture) – PAN, Aadhaar, DOB, and plan data validation.
-</p>
+# Data Migration Validation (100-Customer Demo)
 
-This project is designed to validate data migrations by comparing old and new datasets. It generates clear, easy-to-read reports suitable for non-technical reviewers, ensuring the accuracy and integrity of data transfers during system migrations.
+This project demonstrates a clean and easy-to-understand **data migration validation workflow** using a sample of **100 customer records**. It shows how to ensure that data is correctly migrated from an **OLD system** to a **NEW system** by performing row count checks, primary key checks, null checks, schema validation, and mismatch detection.
 
-## Importance
+The final results are displayed in a clean HTML report hosted on GitHub Pages.
 
-Accurate data migration is critical to avoid errors, data loss, and inconsistencies in new systems. This tool automates validation, saving considerable manual effort and ensuring high reliability.
+### 🔗 Live Report  
+View the report here:  
+**https://mohanreddy6.github.io/Data-Migration-Validation/sample-report.html**
 
-## Quick Start Instructions (Windows)
+---
 
-Follow these steps to set up and run the validation tool:
+## 🚀 Project Purpose
 
-1. **Create and activate a virtual environment:**
+When companies move from one system to another (databases, applications, CRM, billing systems), it is critical to verify that all data has been:
 
-```batch
-python -m venv .venv
-.venv\Scripts\activate
-```
+- correctly migrated  
+- not lost  
+- not duplicated  
+- not changed unexpectedly  
+- consistent in format and schema  
 
-2. **Install dependencies:**
+This project simulates a real migration validation workflow using simple, understandable data so that the validation logic is clear.
 
-```batch
-pip install -r requirements.txt
-```
+---
 
-3. **Run the validation script:**
+## 📊 Data Used (100 Customers)
 
-```batch
-python src\validate.py --old sample_data\old_customers.csv --new sample_data\new_customers.csv --key customer_id --report output\mismatch_report.csv --summary output\summary.txt --html output\report.html
-```
+Each customer has these fields:
 
-The provided sample data contains realistic examples, including intentional mismatches for demonstration purposes.
+| Column        | Description                         |
+|---------------|-------------------------------------|
+| `customer_id` | Unique ID (primary key)             |
+| `name`        | Customer full name                  |
+| `email`       | Email address                       |
+| `dob`         | Date of birth                       |
+| `balance`     | Account balance                     |
+| `status`      | ACTIVE / INACTIVE status            |
 
-## Purpose of the Tool
+Two datasets are compared:
 
-The validation tool:
+- **OLD dataset** → data from the legacy system  
+- **NEW dataset** → data after migration  
 
-* Checks primary key integrity (ensures uniqueness and presence in both datasets).
-* Compares datasets column-by-column to identify mismatches.
-* Identifies missing or new rows, changed values, and differences in nullability.
-* Produces detailed mismatch reports (CSV format), a readable summary (text format), and a simple HTML report for easy review.
+---
 
-## Command Line Arguments
+## ✔️ Validation Checks Performed
 
-The script accepts the following arguments:
+### 1. **Row Count Validation**
+Ensures both systems have the same number of customers.  
+Example: OLD = 100, NEW = 100 → PASS
 
-```
---old       Path to the old dataset CSV file.
---new       Path to the new dataset CSV file.
---key       Primary key column name used for joining datasets.
---report    File path to save detailed mismatch results in CSV format.
---summary   File path to save a plain-text summary.
---html      File path to save a simple HTML report.
---cols      Optional: Comma-separated list of columns to compare. Defaults to columns common to both datasets.
-```
+### 2. **Primary Key Validation**
+Checks for:
+- primary key duplicates in OLD  
+- primary key duplicates in NEW  
+- one-to-one mapping of IDs  
 
-## Project Directory Structure
+Both datasets must have the same `customer_id` values.
 
-```
-data-migration-validation/
-├── README.md
-├── requirements.txt
-├── sample_data/
-│   ├── old_customers.csv
-│   └── new_customers.csv
-├── src/
-│   └── validate.py
-└── output/  (generated reports will be saved here)
-```
+### 3. **Null Check**
+Required fields such as `name` and `email` must not have nulls.
 
-## Example Summary Output
+### 4. **Schema Validation**
+Ensures column names and data types match between OLD and NEW systems.
 
-The summary output provides a quick overview of mismatches found:
+### 5. **Mismatch Detection**
+Identifies specific value differences for each customer.
 
-```
-Rows only in OLD: 5
-Rows only in NEW: 3
-Rows compared: 992
-Changed cells (value-level): 128
-Columns compared: name,email,dob,balance,status
-```
+Example mismatches:
+- Name difference  
+- Email difference  
+- DOB swapped  
+- Balance difference  
+- Status difference  
 
-## Demonstration
+Only **5 mismatches** are intentionally included to keep the demo simple.
 
-* **Command Line Run:**
+---
 
-  Provides an immediate view of script execution, helping quickly identify any errors or issues.
+## 📄 Output Report (HTML)
 
-* **HTML Report:**
+The final results are shown in a clean HTML report that includes:
 
-  Delivers an intuitive visual format for quickly assessing discrepancies and understanding migration outcomes.
+- Summary of totals
+- Validation checklist
+- Explanation of each check
+- Mismatch table (5 mismatches)
+- Row count table
+- Null summary
+- Schema comparison
+- One-to-one mapping confirmation  
 
-* **Live Report Example:**
+This HTML is fully self-contained and can be viewed locally or online.
 
-  Access a live sample report at:
-  https://mohanreddy6.github.io/Data-Migration-Validation/sample-report.html
+---
 
+## 🧭 How to View the Report Locally (VS Code)
 
-## Extensibility and Customization
+1. Open folder in VS Code  
+2. Install “Live Server” extension  
+3. Right-click `sample-report.html` → **Open with Live Server**  
+4. Browser opens with live preview  
+5. Any edits reload instantly  
 
-* Built using the pandas library, this tool requires no external databases or services.
-* Designed to handle large CSV files efficiently. For extremely large datasets, consider implementing chunked processing.
-* Easily extendable to generate Excel reports or integrate into CI/CD workflows.
+---
 
-## Error Handling and Limitations
+## 🔧 Project Structure
 
-* Clearly identifies duplicates, missing keys, and malformed data.
-* Provides detailed error messages and logs for easy troubleshooting and rectification.
-
-## Testing
-
-The project includes unit tests to ensure code correctness and reliability. Integration with continuous integration and deployment (CI/CD) pipelines is straightforward and encouraged for automated testing.
