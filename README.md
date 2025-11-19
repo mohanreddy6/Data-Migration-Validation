@@ -110,18 +110,19 @@ flowchart TD
 
     C --> D[Row Count Check]
     D -->|Pass| E[Primary Key Check]
-    D -->|Fail| Z[Fail: Row Count Mismatch]
+    D -->|Fail| Z1[Fail: Row Count Mismatch]
 
     E -->|Pass| F[Null Check]
-    E -->|Fail| Z[Fail: Key Issues]
+    E -->|Fail| Z2[Fail: Primary Key Issues]
 
     F -->|Pass| G[Schema Comparison]
-    F -->|Fail| Z[Fail: Null Issues]
+    F -->|Fail| Z3[Fail: Null Value Issues]
 
     G -->|Pass| H[Mismatch Detection (5 Differences)]
-    G -->|Fail| Z[Fail: Schema Misalignment]
+    G -->|Fail| Z4[Fail: Schema Misalignment]
 
     H --> I[Generate HTML Report]
     I --> J[Publish via GitHub Pages]
 
     J --> K[End - Report Ready]
+
