@@ -1,4 +1,7 @@
 # Data Migration Validation Tool
+<p class="small">
+  Project: Customer & account master migration for a telecom client (Accenture) – PAN, Aadhaar, DOB, and plan data validation.
+</p>
 
 This project is designed to validate data migrations by comparing old and new datasets. It generates clear, easy-to-read reports suitable for non-technical reviewers, ensuring the accuracy and integrity of data transfers during system migrations.
 
