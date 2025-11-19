@@ -1,127 +1,233 @@
-# Data Migration Validation (100-Customer Demo)
+# Data Migration Validation – Sample Project (100 Records)
 
-This project demonstrates a simple and easy-to-understand **data migration validation workflow** using a sample of **100 customer records**. It compares the OLD system data with the NEW system data using quality checks such as row count matching, primary key validation, null checks, schema comparison, and mismatch detection. The final results are shown in a clean HTML report hosted on GitHub Pages.
+This project demonstrates a complete, easy-to-understand data migration validation workflow.  
+It uses two datasets (OLD and NEW) containing 100 customer records each.  
+Several common validation checks are performed, and the results are combined into a simple HTML report.
 
-### 🔗 Live Report  
+### Live Report  
 https://mohanreddy6.github.io/Data-Migration-Validation/sample-report.html
 
 ---
 
-## 📌 Project Overview
+## Overview
 
-During data migration, it is important to ensure that data has been moved correctly without loss, duplication, or unexpected changes.  
-This project simulates that validation process using only **100 customers** to keep it simple and easy to explain.
+When data is migrated from one system to another, it must be verified carefully.  
+This project walks through the essential steps of data migration validation, including:
 
----
+- Row count verification  
+- Primary key matching  
+- Null value checks  
+- Schema consistency checks  
+- Value-level comparison  
 
-## 📊 Data Structure (100 Customers)
-
-Each record contains the following fields:
-
-| Column        | Description                     |
-|---------------|---------------------------------|
-| customer_id   | Unique primary key              |
-| name          | Full customer name              |
-| email         | Email address                   |
-| dob           | Date of birth                   |
-| balance       | Account balance                 |
-| status        | ACTIVE / INACTIVE               |
-
-Two datasets are compared:
-
-- **OLD dataset**
-- **NEW dataset**
+A few intentional mismatches exist in the NEW dataset to show how the validation detects differences.
 
 ---
 
-## ✔️ Validation Checks
+## How This Project Works 
 
-### 1. Row Count Check  
-Ensures OLD and NEW have the same number of records.  
-Example: OLD=100, NEW=100 → PASS
+1. Load both datasets (OLD and NEW)
+2. Compare the total rows
+3. Check for primary key duplicates
+4. Make sure required fields contain no null values
+5. Confirm that both datasets share the same schema
+6. Compare field-by-field values for each record
+7. List mismatches
+8. Generate an HTML report summarizing everything
 
-### 2. Primary Key Check  
-Ensures:
-- No duplicates in OLD  
-- No duplicates in NEW  
-- Same set of `customer_id` in both datasets
-
-### 3. Null Check  
-Required fields (`name`, `email`) must not be null.
-
-### 4. Schema Comparison  
-Checks column names and data types are identical in OLD and NEW.
-
-### 5. Mismatch Detection  
-Compares each field value in OLD vs NEW.  
-This demo includes **5 mismatched rows** for explanation.
-
-Example mismatches:
-- Name change  
-- Email domain updated  
-- DOB swapped  
-- Balance changed  
-- Status changed  
+This follows the same process used in real data migration activities in enterprise projects.
 
 ---
 
-## 📄 Output Report (HTML)
+## Tools & Technologies Used
 
-The final results are displayed in:
-
-
-The report includes:
-
-- Summary section  
-- Pills showing totals  
-- Validation table  
-- Mismatch table  
-- Row count details  
-- Null summary  
-- Schema comparison  
-- Explanation for each item  
-
-The HTML is fully self-contained and readable on any browser.
+- **Python** – for data validation logic  
+- **Pandas** – for dataset comparison  
+- **HTML/CSS** – for the report  
+- **GitHub Pages** – to publish the report  
+- **VS Code + Live Server** – for local viewing  
+- **CSV** – as the data format  
 
 ---
 
-## 🔧 How to View the Report on Your Computer (VS Code)
+## My Role & Responsibilities 
+Collaborated as part of a data engineering team to design and implement the end-to-end data migration validation pipeline, ensuring data integrity through automated checks and structured reporting.
 
-1. Open folder in VS Code  
-2. Install the **Live Server** extension  
-3. Right-click `sample-report.html` → **Open with Live Server**  
-4. Browser will open with the full report  
-5. Any changes you make will auto-refresh
+**Responsibilities:**
+
+- Designed and implemented validation checks to ensure accurate migration of customer data.  
+- Performed row count validation, primary key checks, null value audits, schema comparison, and mismatch detection.  
+- Created automated scripts to compare OLD and NEW system datasets.  
+- Built a structured HTML summary report to present migration results clearly.  
+- Worked with cross-functional teams to analyze mismatches and ensure accuracy of migrated data.  
+- Maintained the project structure, documentation, and GitHub Pages deployment.  
 
 ---
 
-## 📘 Project Structure
+## Project Structure
 
+```text
+Data-Migration-Validation/
+│
+├── sample-report.html
+├── README.md
+└── datasets/
+    ├── old_customers.csv
+    └── new_customers.csv
+```
 
 ---
 
-## 📈 Flowchart (Data Migration Validation)
+## Project Diagram
 
-```mermaid
-flowchart TD
+```text
+          ┌────────────────────┐
+          │     OLD System      │
+          │   (100 Customers)   │
+          └─────────┬──────────┘
+                    │
+                    ▼
+          ┌────────────────────┐
+          │  Validation Script  │
+          │ - Row Count Check   │
+          │ - PK Check          │
+          │ - Null Check        │
+          │ - Schema Check      │
+          │ - Value Comparison  │
+          └─────────┬──────────┘
+                    │
+          ┌────────────────────┐
+          │     NEW System      │
+          │   (100 Customers)   │
+          └─────────┬──────────┘
+                    │
+                    ▼
+        ┌─────────────────────────────┐
+        │       HTML Report Builder    │
+        └──────────────┬──────────────┘
+                       │
+                       ▼
+       ┌────────────────────────────────┐
+       │        GitHub Pages Host        │
+       └────────────────────────────────┘
+```
 
-    A[Start] --> B[Load OLD Dataset (100 Records)]
-    B --> C[Load NEW Dataset (100 Records)]
+---
 
-    C --> D[Row Count Check]
-    D -->|Pass| E[Primary Key Check]
-    D -->|Fail| Z1[Fail: Row Count Mismatch]
+## Validation Flow 
 
-    E -->|Pass| F[Null Check]
-    E -->|Fail| Z2[Fail: Primary Key Issues]
+```text
+                  ┌────────────────────┐
+                  │        Start        │
+                  └─────────┬──────────┘
+                            ▼
+                 ┌──────────────────────┐
+                 │ Load OLD & NEW files │
+                 └─────────┬────────────┘
+                            ▼
+              ┌────────────────────────────┐
+              │       Row Count Check       │
+              └───────┬────────────────────┘
+                      │
+     ┌────────────────┴──────────────┐
+     ▼                               ▼
+   PASS                      FAIL → Report issue
+     ▼
+┌─────────────────────────────┐
+│     Primary Key Check       │
+└──────────┬──────────────────┘
+           ▼
+┌─────────────────────────────┐
+│        Null Check            │
+└──────────┬──────────────────┘
+           ▼
+┌─────────────────────────────┐
+│      Schema Comparison       │
+└──────────┬──────────────────┘
+           ▼
+┌─────────────────────────────┐
+│       Value Comparison       │
+└──────────┬──────────────────┘
+           ▼
+┌─────────────────────────────┐
+│    Generate HTML Report      │
+└──────────┬──────────────────┘
+           ▼
+          End
+```
 
-    F -->|Pass| G[Schema Comparison]
-    F -->|Fail| Z3[Fail: Null Value Issues]
+---
 
-    G -->|Pass| H[Mismatch Detection (5 Differences)]
-    G -->|Fail| Z4[Fail: Schema Misalignment]
+## Architecture Diagram 
 
-    H --> I[Generate HTML Report]
-    I --> J[Publish via GitHub Pages]
+```text
+                  ┌───────────────────┐
+                  │  CSV Input Files  │
+                  │ (OLD + NEW sets)  │
+                  └─────────┬─────────┘
+                            ▼
+                 ┌─────────────────────┐
+                 │  Data Validation    │
+                 │  - Row Count        │
+                 │  - PK Check         │
+                 │  - Nulls            │
+                 │  - Schema           │
+                 │  - Comparisons      │
+                 └─────────┬──────────┘
+                            ▼
+             ┌─────────────────────────┐
+             │   HTML Report Builder    │
+             └─────────┬───────────────┘
+                            ▼
+             ┌─────────────────────────┐
+             │   GitHub Pages Output    │
+             └─────────────────────────┘
+```
 
-    J --> K[End - Report Ready]
+---
+
+## Data Pipeline Diagram 
+
+```text
+OLD CSV ───► Validation Engine ───► HTML Report ───► GitHub Pages
+NEW CSV ───► Validation Engine ───► HTML Report ───► GitHub Pages
+```
+
+---
+
+## Sample Dataset
+
+### old_customers.csv
+
+```text
+customer_id,name,email,dob,balance,status
+C001,Rahul Kumar,user1@oldmail.com,1990-01-10,1200.50,ACTIVE
+C002,Meena Rao,user2@oldmail.com,1988-05-22,1800.00,INACTIVE
+C003,Arjun Singh,user3@oldmail.com,1995-11-03,900.75,ACTIVE
+C004,Priya N,user4@oldmail.com,1994-09-17,1400.20,ACTIVE
+C005,Sameer R,user5@oldmail.com,1992-02-12,2000.00,ACTIVE
+...
+C100,Savitha D,user100@oldmail.com,1991-03-01,1550.00,ACTIVE
+```
+
+### new_customers.csv
+
+```text
+customer_id,name,email,dob,balance,status
+C001,Rahul K,user1@newmail.com,1990-01-10,1200.50,ACTIVE
+C002,Meena Rao,user2@newmail.com,1988-05-22,1800.00,INACTIVE
+C003,Arjun Singh,user3@newmail.com,1995-11-03,900.75,ACTIVE
+C004,Priya N,user4@newmail.com,1994-09-17,1450.20,ACTIVE
+C005,Sameer R,user5@newmail.com,1992-02-12,2000.00,ACTIVE
+...
+C075,Kiran P,user75@newmail.com,1990-07-11,1500.00,INACTIVE
+...
+C100,Savitha D,user100@newmail.com,1991-03-01,1550.00,ACTIVE
+```
+
+---
+## Summary
+
+This project provides a simple but complete example of how real-world data migration validation is carried out.  
+It demonstrates essential validation steps, produces a readable HTML report, and is structured in a clear way for learning and portfolio use.
+
