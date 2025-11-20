@@ -1,3 +1,4 @@
+// Parse CSV into headers + rows
 function parseCSV(text) {
     const lines = text.trim().split("\n");
     const headers = lines[0].split(",").map(h => h.trim());
@@ -5,22 +6,51 @@ function parseCSV(text) {
     const rows = lines.slice(1).map(line => {
         const cols = line.split(",");
         let obj = {};
-
         headers.forEach((h, i) => {
             obj[h] = cols[i] ? cols[i].trim() : "";
         });
-
         return obj;
     });
 
     return { headers, rows };
 }
 
+// Clear results UI
 function clearResults() {
     document.getElementById("results").innerText = "No results yet.";
     document.getElementById("summary").style.display = "none";
 }
 
+// Create mismatch table (new UI)
+function createMismatchTable(mismatches) {
+    if (mismatches.length === 0) return "<p>No value mismatches found.</p>";
+
+    let table = `
+        <table style="border-collapse: collapse; width:100%; margin-top:20px;">
+            <tr style='background:#f0f0f0; font-weight:bold;'>
+                <td style='border:1px solid #ccc; padding:8px;'>Customer ID</td>
+                <td style='border:1px solid #ccc; padding:8px;'>Field</td>
+                <td style='border:1px solid #ccc; padding:8px;'>Old Value</td>
+                <td style='border:1px solid #ccc; padding:8px;'>New Value</td>
+            </tr>
+    `;
+
+    mismatches.forEach(m => {
+        table += `
+            <tr>
+                <td style='border:1px solid #ccc; padding:8px;'>${m.id}</td>
+                <td style='border:1px solid #ccc; padding:8px;'>${m.field}</td>
+                <td style='border:1px solid #ccc; padding:8px; background:#ffe5e5;'>${m.oldVal}</td>
+                <td style='border:1px solid #ccc; padding:8px; background:#ffe5e5;'>${m.newVal}</td>
+            </tr>
+        `;
+    });
+
+    table += "</table>";
+    return table;
+}
+
+// MAIN VALIDATION FUNCTION
 function validate() {
     const oldFile = document.getElementById("oldFile").files[0];
     const newFile = document.getElementById("newFile").files[0];
@@ -45,27 +75,25 @@ function validate() {
             typeErrors: 0
         };
 
-        // === Row Count Check ===
+        // ROW COUNT CHECK
         output += "=== ROW COUNT CHECK ===\n";
         output += `Old Rows: ${oldCSV.rows.length}\n`;
         output += `New Rows: ${newCSV.rows.length}\n`;
-
         summary.rowCountPass = oldCSV.rows.length === newCSV.rows.length;
         output += summary.rowCountPass ? "PASS\n\n" : "FAIL\n\n";
 
-        // === Schema Check ===
+        // SCHEMA CHECK
         output += "=== SCHEMA CHECK ===\n";
         output += `Old Columns: ${oldCSV.headers.join(", ")}\n`;
         output += `New Columns: ${newCSV.headers.join(", ")}\n`;
-
         summary.schemaPass = oldCSV.headers.join() === newCSV.headers.join();
         output += summary.schemaPass ? "PASS\n\n" : "FAIL\n\n";
 
-        // Convert new to map
+        // MAP NEW DATA BY ID
         const newMap = {};
         newCSV.rows.forEach(r => newMap[r.customer_id] = r);
 
-        // === Missing IDs Check ===
+        // MISSING IDS CHECK
         output += "=== MISSING ID CHECK ===\n";
         const oldIDs = oldCSV.rows.map(r => r.customer_id);
         const newIDs = newCSV.rows.map(r => r.customer_id);
@@ -87,10 +115,10 @@ function validate() {
         if (summary.missingIDs === 0) output += "No missing IDs.\n";
         output += "\n";
 
-        // === Duplicate PK Check ===
+        // DUPLICATE PK CHECK
         output += "=== DUPLICATE PRIMARY KEY CHECK ===\n";
 
-        function countDuplicates(list) {
+        function findDuplicates(list) {
             const seen = new Set();
             const dups = new Set();
             list.forEach(id => {
@@ -100,8 +128,8 @@ function validate() {
             return Array.from(dups);
         }
 
-        const oldDups = countDuplicates(oldIDs);
-        const newDups = countDuplicates(newIDs);
+        const oldDups = findDuplicates(oldIDs);
+        const newDups = findDuplicates(newIDs);
 
         if (oldDups.length === 0 && newDups.length === 0) {
             output += "No duplicates.\n\n";
@@ -112,8 +140,9 @@ function validate() {
             output += "\n";
         }
 
-        // === Null Check ===
+        // NULL CHECK
         output += "=== NULL VALUE CHECK ===\n";
+
         oldCSV.rows.forEach(r => {
             oldCSV.headers.forEach(h => {
                 if (r[h] === "") {
@@ -135,7 +164,7 @@ function validate() {
         if (summary.nullIssues === 0) output += "No null values.\n";
         output += "\n";
 
-        // === Data Type Validation ===
+        // TYPE CHECK (email, date, number)
         output += "=== DATA TYPE VALIDATION ===\n";
 
         function validEmail(email) {
@@ -146,8 +175,8 @@ function validate() {
             return /^\d{4}-\d{2}-\d{2}$/.test(date);
         }
 
-        function validNumber(n) {
-            return !isNaN(parseFloat(n));
+        function validNumber(num) {
+            return !isNaN(parseFloat(num));
         }
 
         newCSV.rows.forEach(r => {
@@ -166,10 +195,37 @@ function validate() {
         });
 
         if (summary.typeErrors === 0) output += "All data types valid.\n";
+        output += "\n";
 
-        document.getElementById("results").innerText = output;
+        // VALUE MISMATCH CHECK (TABLE)
+        output += "=== VALUE MISMATCHES ===\n";
+        let mismatches = [];
 
-        // === Summary Box ===
+        oldCSV.rows.forEach(oldRow => {
+            const id = oldRow.customer_id;
+            const newRow = newMap[id];
+            if (!newRow) return;
+
+            oldCSV.headers.forEach(h => {
+                if (oldRow[h] !== newRow[h]) {
+                    mismatches.push({
+                        id: id,
+                        field: h,
+                        oldVal: oldRow[h],
+                        newVal: newRow[h]
+                    });
+                }
+            });
+        });
+
+        summary.mismatches = mismatches.length;
+
+        output += `${mismatches.length} mismatches found.\n\n`;
+        output += createMismatchTable(mismatches) + "\n";
+
+        document.getElementById("results").innerHTML = output;
+
+        // SUMMARY BOX DISPLAY
         let s = "";
         s += `Row Count Check: <span class="${summary.rowCountPass ? 'pass' : 'fail'}">${summary.rowCountPass ? 'PASS' : 'FAIL'}</span><br>`;
         s += `Schema Check: <span class="${summary.schemaPass ? 'pass' : 'fail'}">${summary.schemaPass ? 'PASS' : 'FAIL'}</span><br>`;
@@ -177,6 +233,7 @@ function validate() {
         s += `Duplicate PK Issues: ${summary.duplicatePKs}<br>`;
         s += `Null Value Issues: ${summary.nullIssues}<br>`;
         s += `Data Type Issues: ${summary.typeErrors}<br>`;
+        s += `Value Mismatches: ${summary.mismatches}<br>`;
 
         document.getElementById("summaryContent").innerHTML = s;
         document.getElementById("summary").style.display = "block";
