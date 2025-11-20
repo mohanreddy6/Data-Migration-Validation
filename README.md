@@ -7,7 +7,7 @@
 This project presents a complete, end-to-end data migration validation workflow using two sample datasets containing 100 customer records each. It demonstrates how real migration teams validate data when moving from one system to another, using a repeatable process that checks data consistency, accuracy, completeness, and schema alignment.
 
 check your dataset validation here:-
-https://mohanreddy6.github.io/Data-Migration-Validation/sample-report.html](https://mohanreddy6.github.io/Data-Migration-Validation/)
+(https://mohanreddy6.github.io/Data-Migration-Validation/)
 
 
 # 1. Why This Project Exists 
