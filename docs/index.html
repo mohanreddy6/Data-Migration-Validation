@@ -3,52 +3,95 @@
 <head>
     <title>Data Migration Validator</title>
     <meta charset="UTF-8" />
+
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 30px;
+            background: #f6f8fa;
+            margin: 0;
+            padding: 40px;
+            color: #333;
         }
+
         h1 {
             font-size: 28px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
-        .box {
-            border: 1px solid #ccc;
-            padding: 20px;
-            margin-top: 20px;
-            width: 400px;
+
+        p.sub {
+            margin-top: 0;
+            color: #666;
         }
+
+        .container {
+            background: #fff;
+            padding: 25px;
+            width: 450px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="file"] {
+            margin-top: 5px;
+            width: 100%;
+        }
+
         button {
-            padding: 10px 20px;
+            padding: 12px 20px;
             margin-top: 20px;
+            width: 100%;
+            border: none;
+            border-radius: 6px;
+            background: #2d7ff9;
+            color: white;
+            font-size: 16px;
             cursor: pointer;
+            font-weight: bold;
         }
-        #results {
-            margin-top: 30px;
+
+        button:hover {
+            background: #1967d2;
+        }
+
+        .results-box {
+            margin-top: 25px;
             white-space: pre-wrap;
-            font-family: monospace;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            font-family: Consolas, monospace;
+            font-size: 14px;
         }
     </style>
 </head>
+
 <body>
 
     <h1>Data Migration Validation Tool</h1>
-    <p>Upload OLD and NEW CSV datasets to validate differences instantly.</p>
+    <p class="sub">Upload your OLD and NEW CSV datasets to compare and validate the migration.</p>
 
-    <div class="box">
-        <label><strong>Old Dataset (CSV):</strong></label><br/>
+    <div class="container">
+        <label>Old Dataset (CSV):</label>
         <input type="file" id="oldFile" accept=".csv" />
-        <br/><br/>
 
-        <label><strong>New Dataset (CSV):</strong></label><br/>
+        <br><br>
+
+        <label>New Dataset (CSV):</label>
         <input type="file" id="newFile" accept=".csv" />
-        <br/>
 
         <button onclick="validate()">Validate Data</button>
     </div>
 
-    <h2>Results</h2>
-    <div id="results">No results yet.</div>
+    <div id="results" class="results-box">
+        No results yet.
+    </div>
 
     <script src="script.js"></script>
 
