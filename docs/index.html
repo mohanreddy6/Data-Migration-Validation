@@ -1,1 +1,56 @@
-<meta http-equiv="refresh" content="0; url=sample-report.html"> 
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Migration Validator</title>
+    <meta charset="UTF-8" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .box {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-top: 20px;
+            width: 400px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        #results {
+            margin-top: 30px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Data Migration Validation Tool</h1>
+    <p>Upload OLD and NEW CSV datasets to validate differences instantly.</p>
+
+    <div class="box">
+        <label><strong>Old Dataset (CSV):</strong></label><br/>
+        <input type="file" id="oldFile" accept=".csv" />
+        <br/><br/>
+
+        <label><strong>New Dataset (CSV):</strong></label><br/>
+        <input type="file" id="newFile" accept=".csv" />
+        <br/>
+
+        <button onclick="validate()">Validate Data</button>
+    </div>
+
+    <h2>Results</h2>
+    <div id="results">No results yet.</div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
