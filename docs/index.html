@@ -99,6 +99,66 @@
 
         .pass { color: green; font-weight: bold; }
         .fail { color: red; font-weight: bold; }
+
+
+        /* ===================================== */
+        /* FILTER BUTTON + PANEL (ADDED CODE)   */
+        /* ===================================== */
+
+        #filterBtn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: #2d2d2d;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 9999;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+        }
+
+        #filterPanel {
+            position: fixed;
+            top: 0;
+            right: -250px;
+            width: 250px;
+            height: 100%;
+            background: #f4f4f4;
+            border-left: 1px solid #ccc;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: right 0.3s ease;
+            z-index: 9998;
+            overflow-y: auto;
+        }
+
+        #filterPanel.open {
+            right: 0;
+        }
+
+        #filterPanel h3 {
+            margin-top: 0;
+            font-size: 18px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        #filterPanel label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        #filterPanel input[type="text"],
+        #filterPanel select {
+            width: 100%;
+            padding: 6px;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
     </style>
 </head>
 
@@ -128,6 +188,84 @@
     </div>
 
     <script src="script.js"></script>
+
+
+    <!-- ===================================== -->
+    <!-- FILTER SYSTEM (ENTIRE BLOCK)          -->
+    <!-- ===================================== -->
+
+    <button id="filterBtn">Filter ▾</button>
+
+    <div id="filterPanel">
+      <h3>Filters</h3>
+
+      <label><input type="checkbox" id="f_missing"> Missing IDs</label>
+      <label><input type="checkbox" id="f_extra"> Extra IDs</label>
+      <label><input type="checkbox" id="f_duplicates"> Duplicate IDs</label>
+      <label><input type="checkbox" id="f_nulls"> Null Values</label>
+      <label><input type="checkbox" id="f_format"> Format Errors</label>
+      <label><input type="checkbox" id="f_mismatch"> Mismatches</label>
+
+      <hr>
+
+      <label>Search by Customer ID</label>
+      <input type="text" id="searchID" placeholder="e.g. C00451">
+
+      <label>Filter by Column</label>
+      <select id="columnFilter">
+        <option value="">All Columns</option>
+        <option value="name">Name</option>
+        <option value="email">Email</option>
+        <option value="dob">Date of Birth</option>
+        <option value="balance">Balance</option>
+        <option value="status">Status</option>
+      </select>
+    </div>
+
+    <script>
+      const filterBtn = document.getElementById("filterBtn");
+      const panel = document.getElementById("filterPanel");
+
+      filterBtn.addEventListener("click", () => {
+        panel.classList.toggle("open");
+      });
+
+      function applyFilters() {
+        const f_missing = document.getElementById("f_missing").checked;
+        const f_extra = document.getElementById("f_extra").checked;
+        const f_dup = document.getElementById("f_duplicates").checked;
+        const f_null = document.getElementById("f_nulls").checked;
+        const f_format = document.getElementById("f_format").checked;
+        const f_mismatch = document.getElementById("f_mismatch").checked;
+
+        const searchID = document.getElementById("searchID").value.trim().toUpperCase();
+        const fieldFilter = document.getElementById("columnFilter").value;
+
+        document.querySelectorAll(".result-row").forEach(row => {
+          const cid = row.getAttribute("data-id").toUpperCase();
+          const type = row.getAttribute("data-type");
+          const field = row.getAttribute("data-field");
+          let show = true;
+
+          if (searchID && !cid.includes(searchID)) show = false;
+          if (fieldFilter && field !== fieldFilter) show = false;
+
+          if (type === "missing" && !f_missing) show = false;
+          if (type === "extra" && !f_extra) show = false;
+          if (type === "duplicate" && !f_dup) show = false;
+          if (type === "null" && !f_null) show = false;
+          if (type === "format" && !f_format) show = false;
+          if (type === "mismatch" && !f_mismatch) show = false;
+
+          row.style.display = show ? "" : "none";
+        });
+      }
+
+      document.querySelectorAll("#filterPanel input, #filterPanel select").forEach(item => {
+        item.addEventListener("input", applyFilters);
+        item.addEventListener("change", applyFilters);
+      });
+    </script>
 
 </body>
 </html>
