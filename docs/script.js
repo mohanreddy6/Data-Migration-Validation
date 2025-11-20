@@ -17,37 +17,75 @@ function parseCSV(text) {
 
 // Clear results UI
 function clearResults() {
-    document.getElementById("results").innerText = "No results yet.";
+    document.getElementById("results").innerHTML = "No results yet.";
     document.getElementById("summary").style.display = "none";
 }
 
-// Create mismatch table (new UI)
-function createMismatchTable(mismatches) {
-    if (mismatches.length === 0) return "<p>No value mismatches found.</p>";
+// Utility: duplicate finder
+function findDuplicates(list) {
+    const seen = new Set();
+    const dups = new Set();
+    list.forEach(id => {
+        if (seen.has(id)) dups.add(id);
+        seen.add(id);
+    });
+    return Array.from(dups);
+}
 
-    let table = `
-        <table style="border-collapse: collapse; width:100%; margin-top:20px;">
-            <tr style='background:#f0f0f0; font-weight:bold;'>
-                <td style='border:1px solid #ccc; padding:8px;'>Customer ID</td>
-                <td style='border:1px solid #ccc; padding:8px;'>Field</td>
-                <td style='border:1px solid #ccc; padding:8px;'>Old Value</td>
-                <td style='border:1px solid #ccc; padding:8px;'>New Value</td>
-            </tr>
-    `;
+// Validators
+function validEmail(email) {
+    return /\S+@\S+\.\S+/.test(email);
+}
 
-    mismatches.forEach(m => {
-        table += `
-            <tr>
-                <td style='border:1px solid #ccc; padding:8px;'>${m.id}</td>
-                <td style='border:1px solid #ccc; padding:8px;'>${m.field}</td>
-                <td style='border:1px solid #ccc; padding:8px; background:#ffe5e5;'>${m.oldVal}</td>
-                <td style='border:1px solid #ccc; padding:8px; background:#ffe5e5;'>${m.newVal}</td>
-            </tr>
-        `;
+function validDate(date) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(date);
+}
+
+function validNumber(num) {
+    return !isNaN(parseFloat(num));
+}
+
+// Build generic issue tables
+function buildIssueTable(title, rows, columns) {
+    let html = `<h3>${title}</h3>`;
+    if (!rows || rows.length === 0) {
+        html += `<p>No ${title.toLowerCase()}.</p>`;
+        return html;
+    }
+
+    html += `<table style="border-collapse: collapse; width:100%; margin-top:8px; margin-bottom:20px; font-size:13px;">`;
+    html += `<tr style="background:#f0f0f0; font-weight:bold;">`;
+
+    columns.forEach(col => {
+        html += `<td style="border:1px solid #ccc; padding:6px;">${col.label}</td>`;
+    });
+    html += `</tr>`;
+
+    rows.forEach(r => {
+        // color per type
+        let bg = "";
+        if (r.type === "missing" || r.type === "extra") {
+            bg = "background:#fff8cc;"; // yellow
+        } else if (r.type === "duplicate") {
+            bg = "background:#ffe0b3;"; // orange
+        } else if (r.type === "null") {
+            bg = "background:#f0f0f0;"; // grey
+        } else if (r.type === "format") {
+            bg = "background:#d9e8ff;"; // light blue
+        } else if (r.type === "mismatch") {
+            bg = "background:#ffd6d6;"; // light red
+        }
+
+        html += `<tr class="result-row" data-id="${r.id || ""}" data-type="${r.type}" data-field="${r.field || ""}" style="${bg}">`;
+        columns.forEach(col => {
+            const val = r[col.key] !== undefined ? r[col.key] : "";
+            html += `<td style="border:1px solid #ccc; padding:6px;">${val}</td>`;
+        });
+        html += `</tr>`;
     });
 
-    table += "</table>";
-    return table;
+    html += `</table>`;
+    return html;
 }
 
 // MAIN VALIDATION FUNCTION
@@ -64,90 +102,143 @@ function validate() {
         const oldCSV = parseCSV(data[0]);
         const newCSV = parseCSV(data[1]);
 
-        let output = "";
+        // Summary metrics
         let summary = {
             rowCountPass: false,
             schemaPass: false,
-            mismatches: 0,
-            missingIDs: 0,
-            duplicatePKs: 0,
-            nullIssues: 0,
-            typeErrors: 0
+            missingCount: 0,
+            extraCount: 0,
+            duplicateCount: 0,
+            nullCount: 0,
+            formatCount: 0,
+            mismatchCount: 0
         };
 
-        // ROW COUNT CHECK
-        output += "=== ROW COUNT CHECK ===\n";
-        output += `Old Rows: ${oldCSV.rows.length}\n`;
-        output += `New Rows: ${newCSV.rows.length}\n`;
-        summary.rowCountPass = oldCSV.rows.length === newCSV.rows.length;
-        output += summary.rowCountPass ? "PASS\n\n" : "FAIL\n\n";
+        const hasEmail = newCSV.headers.includes("email");
+        const hasDob = newCSV.headers.includes("dob");
+        const hasBalance = newCSV.headers.includes("balance");
 
-        // SCHEMA CHECK
-        output += "=== SCHEMA CHECK ===\n";
-        output += `Old Columns: ${oldCSV.headers.join(", ")}\n`;
-        output += `New Columns: ${newCSV.headers.join(", ")}\n`;
-        summary.schemaPass = oldCSV.headers.join() === newCSV.headers.join();
-        output += summary.schemaPass ? "PASS\n\n" : "FAIL\n\n";
-
-        // MAP NEW DATA BY ID
-        const newMap = {};
-        newCSV.rows.forEach(r => newMap[r.customer_id] = r);
-
-        // MISSING IDS CHECK
-        output += "=== MISSING ID CHECK ===\n";
+        // Build ID arrays and maps
         const oldIDs = oldCSV.rows.map(r => r.customer_id);
         const newIDs = newCSV.rows.map(r => r.customer_id);
 
+        const newMap = {};
+        newCSV.rows.forEach(r => {
+            newMap[r.customer_id] = r;
+        });
+
+        let html = "";
+
+        // 1) Row Count + Schema
+        summary.rowCountPass = oldCSV.rows.length === newCSV.rows.length;
+        summary.schemaPass = oldCSV.headers.join() === newCSV.headers.join();
+
+        html += `<h3>Row Count & Schema Checks</h3>`;
+        html += `<p>Old Rows: ${oldCSV.rows.length}<br>New Rows: ${newCSV.rows.length}<br>`;
+        html += `Row Count: <span style="font-weight:bold; color:${summary.rowCountPass ? 'green' : 'red'};">${summary.rowCountPass ? 'PASS' : 'FAIL'}</span><br>`;
+        html += `Schema Match: <span style="font-weight:bold; color:${summary.schemaPass ? 'green' : 'red'};">${summary.schemaPass ? 'PASS' : 'FAIL'}</span></p>`;
+
+        // 2) Missing / Extra IDs
+        let missingRows = [];
+        let extraRows = [];
+
         oldIDs.forEach(id => {
             if (!newMap[id]) {
-                output += `Missing in NEW → ${id}\n`;
-                summary.missingIDs++;
+                missingRows.push({
+                    id: id,
+                    type: "missing",
+                    field: "customer_id",
+                    source: "OLD",
+                    details: "Present in OLD, missing in NEW"
+                });
             }
         });
 
         newIDs.forEach(id => {
             if (!oldIDs.includes(id)) {
-                output += `Extra in NEW → ${id}\n`;
-                summary.missingIDs++;
+                extraRows.push({
+                    id: id,
+                    type: "extra",
+                    field: "customer_id",
+                    source: "NEW",
+                    details: "Present in NEW, not in OLD"
+                });
             }
         });
 
-        if (summary.missingIDs === 0) output += "No missing IDs.\n";
-        output += "\n";
+        summary.missingCount = missingRows.length;
+        summary.extraCount = extraRows.length;
 
-        // DUPLICATE PK CHECK
-        output += "=== DUPLICATE PRIMARY KEY CHECK ===\n";
+        html += buildIssueTable(
+            "Missing IDs (Present in OLD, missing in NEW)",
+            missingRows,
+            [
+                { key: "id", label: "Customer ID" },
+                { key: "source", label: "Source" },
+                { key: "details", label: "Details" }
+            ]
+        );
 
-        function findDuplicates(list) {
-            const seen = new Set();
-            const dups = new Set();
-            list.forEach(id => {
-                if (seen.has(id)) dups.add(id);
-                seen.add(id);
-            });
-            return Array.from(dups);
-        }
+        html += buildIssueTable(
+            "Extra IDs (Present in NEW, not in OLD)",
+            extraRows,
+            [
+                { key: "id", label: "Customer ID" },
+                { key: "source", label: "Source" },
+                { key: "details", label: "Details" }
+            ]
+        );
 
+        // 3) Duplicate Primary Keys
+        let duplicateRows = [];
         const oldDups = findDuplicates(oldIDs);
         const newDups = findDuplicates(newIDs);
 
-        if (oldDups.length === 0 && newDups.length === 0) {
-            output += "No duplicates.\n\n";
-        } else {
-            oldDups.forEach(id => output += `Duplicate in OLD: ${id}\n`);
-            newDups.forEach(id => output += `Duplicate in NEW: ${id}\n`);
-            summary.duplicatePKs = oldDups.length + newDups.length;
-            output += "\n";
-        }
+        oldDups.forEach(id => {
+            duplicateRows.push({
+                id: id,
+                type: "duplicate",
+                field: "customer_id",
+                source: "OLD",
+                details: "Duplicate ID in OLD dataset"
+            });
+        });
 
-        // NULL CHECK
-        output += "=== NULL VALUE CHECK ===\n";
+        newDups.forEach(id => {
+            duplicateRows.push({
+                id: id,
+                type: "duplicate",
+                field: "customer_id",
+                source: "NEW",
+                details: "Duplicate ID in NEW dataset"
+            });
+        });
+
+        summary.duplicateCount = duplicateRows.length;
+
+        html += buildIssueTable(
+            "Duplicate Primary Keys",
+            duplicateRows,
+            [
+                { key: "id", label: "Customer ID" },
+                { key: "source", label: "Dataset" },
+                { key: "details", label: "Details" }
+            ]
+        );
+
+        // 4) Null Values
+        let nullRows = [];
 
         oldCSV.rows.forEach(r => {
             oldCSV.headers.forEach(h => {
                 if (r[h] === "") {
-                    output += `OLD Null → ID ${r.customer_id}, Field ${h}\n`;
-                    summary.nullIssues++;
+                    nullRows.push({
+                        id: r.customer_id,
+                        type: "null",
+                        field: h,
+                        source: "OLD",
+                        value: "(empty)"
+                    });
                 }
             });
         });
@@ -155,51 +246,78 @@ function validate() {
         newCSV.rows.forEach(r => {
             newCSV.headers.forEach(h => {
                 if (r[h] === "") {
-                    output += `NEW Null → ID ${r.customer_id}, Field ${h}\n`;
-                    summary.nullIssues++;
+                    nullRows.push({
+                        id: r.customer_id,
+                        type: "null",
+                        field: h,
+                        source: "NEW",
+                        value: "(empty)"
+                    });
                 }
             });
         });
 
-        if (summary.nullIssues === 0) output += "No null values.\n";
-        output += "\n";
+        summary.nullCount = nullRows.length;
 
-        // TYPE CHECK (email, date, number)
-        output += "=== DATA TYPE VALIDATION ===\n";
+        html += buildIssueTable(
+            "Null / Empty Values",
+            nullRows,
+            [
+                { key: "id", label: "Customer ID" },
+                { key: "source", label: "Dataset" },
+                { key: "field", label: "Field" },
+                { key: "value", label: "Value" }
+            ]
+        );
 
-        function validEmail(email) {
-            return /\S+@\S+\.\S+/.test(email);
-        }
-
-        function validDate(date) {
-            return /^\d{4}-\d{2}-\d{2}$/.test(date);
-        }
-
-        function validNumber(num) {
-            return !isNaN(parseFloat(num));
-        }
+        // 5) Data Type / Format Issues (NEW dataset)
+        let formatRows = [];
 
         newCSV.rows.forEach(r => {
-            if (!validEmail(r.email)) {
-                output += `Invalid Email → ${r.customer_id}: ${r.email}\n`;
-                summary.typeErrors++;
+            if (hasEmail && r.email !== "" && !validEmail(r.email)) {
+                formatRows.push({
+                    id: r.customer_id,
+                    type: "format",
+                    field: "email",
+                    value: r.email,
+                    details: "Invalid email format"
+                });
             }
-            if (!validDate(r.dob)) {
-                output += `Invalid DOB → ${r.customer_id}: ${r.dob}\n`;
-                summary.typeErrors++;
+            if (hasDob && r.dob !== "" && !validDate(r.dob)) {
+                formatRows.push({
+                    id: r.customer_id,
+                    type: "format",
+                    field: "dob",
+                    value: r.dob,
+                    details: "Invalid date format (expected YYYY-MM-DD)"
+                });
             }
-            if (!validNumber(r.balance)) {
-                output += `Invalid Balance → ${r.customer_id}: ${r.balance}\n`;
-                summary.typeErrors++;
+            if (hasBalance && r.balance !== "" && !validNumber(r.balance)) {
+                formatRows.push({
+                    id: r.customer_id,
+                    type: "format",
+                    field: "balance",
+                    value: r.balance,
+                    details: "Invalid numeric value"
+                });
             }
         });
 
-        if (summary.typeErrors === 0) output += "All data types valid.\n";
-        output += "\n";
+        summary.formatCount = formatRows.length;
 
-        // VALUE MISMATCH CHECK (TABLE)
-        output += "=== VALUE MISMATCHES ===\n";
-        let mismatches = [];
+        html += buildIssueTable(
+            "Data Type / Format Issues (NEW dataset)",
+            formatRows,
+            [
+                { key: "id", label: "Customer ID" },
+                { key: "field", label: "Field" },
+                { key: "value", label: "Value" },
+                { key: "details", label: "Details" }
+            ]
+        );
+
+        // 6) Value Mismatches
+        let mismatchRows = [];
 
         oldCSV.rows.forEach(oldRow => {
             const id = oldRow.customer_id;
@@ -207,33 +325,46 @@ function validate() {
             if (!newRow) return;
 
             oldCSV.headers.forEach(h => {
-                if (oldRow[h] !== newRow[h]) {
-                    mismatches.push({
+                const oldVal = oldRow[h] || "";
+                const newVal = newRow[h] || "";
+                if (oldVal !== newVal) {
+                    mismatchRows.push({
                         id: id,
+                        type: "mismatch",
                         field: h,
-                        oldVal: oldRow[h],
-                        newVal: newRow[h]
+                        oldVal: oldVal,
+                        newVal: newVal
                     });
                 }
             });
         });
 
-        summary.mismatches = mismatches.length;
+        summary.mismatchCount = mismatchRows.length;
 
-        output += `${mismatches.length} mismatches found.\n\n`;
-        output += createMismatchTable(mismatches) + "\n";
+        html += buildIssueTable(
+            "Value Mismatches (OLD vs NEW for same ID)",
+            mismatchRows,
+            [
+                { key: "id", label: "Customer ID" },
+                { key: "field", label: "Field" },
+                { key: "oldVal", label: "Old Value" },
+                { key: "newVal", label: "New Value" }
+            ]
+        );
 
-        document.getElementById("results").innerHTML = output;
+        // Push everything to the results box
+        document.getElementById("results").innerHTML = html;
 
         // SUMMARY BOX DISPLAY
         let s = "";
         s += `Row Count Check: <span class="${summary.rowCountPass ? 'pass' : 'fail'}">${summary.rowCountPass ? 'PASS' : 'FAIL'}</span><br>`;
         s += `Schema Check: <span class="${summary.schemaPass ? 'pass' : 'fail'}">${summary.schemaPass ? 'PASS' : 'FAIL'}</span><br>`;
-        s += `Missing ID Issues: ${summary.missingIDs}<br>`;
-        s += `Duplicate PK Issues: ${summary.duplicatePKs}<br>`;
-        s += `Null Value Issues: ${summary.nullIssues}<br>`;
-        s += `Data Type Issues: ${summary.typeErrors}<br>`;
-        s += `Value Mismatches: ${summary.mismatches}<br>`;
+        s += `Missing IDs: ${summary.missingCount}<br>`;
+        s += `Extra IDs: ${summary.extraCount}<br>`;
+        s += `Duplicate PK Issues: ${summary.duplicateCount}<br>`;
+        s += `Null Value Issues: ${summary.nullCount}<br>`;
+        s += `Format / Type Issues: ${summary.formatCount}<br>`;
+        s += `Value Mismatches: ${summary.mismatchCount}<br>`;
 
         document.getElementById("summaryContent").innerHTML = s;
         document.getElementById("summary").style.display = "block";
