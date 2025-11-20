@@ -1,6 +1,6 @@
 [![CI](https://github.com/mohanreddy6/Data-Migration-Validation/actions/workflows/main.yml/badge.svg)](https://github.com/mohanreddy6/Data-Migration-Validation/actions/workflows/main.yml)
 ![Python](https://img.shields.io/badge/python-3.10%20|%203.11-blue)
-![License](https://img.shields.io/badge/license-MIT-informational)
+![License](https://img.shields.io/badge/license-MIT-informational) 
 
 # Data Migration Validation – Sample Project (100 Records)
 
